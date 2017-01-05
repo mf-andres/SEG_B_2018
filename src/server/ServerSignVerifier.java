@@ -1,4 +1,4 @@
-package servidor.src;
+package server;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,7 +22,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
-public class FirmarServidorValidarCliente {
+public class ServerSignVerifier {
 
 	private static PrivateKey privateKeyServ;
 	private static PublicKey publicKey;
@@ -32,7 +32,7 @@ public class FirmarServidorValidarCliente {
 	private static String pathToKeyStore;
 	private static String pathToTrustStore;
 
-	public FirmarServidorValidarCliente(String path1, String path2) {
+	public ServerSignVerifier(String path1, String path2) {
 		pathToKeyStore = path1;
 		pathToTrustStore = path2;
 	}

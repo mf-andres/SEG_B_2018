@@ -1,13 +1,13 @@
-package servidor.src;
+package messages;
 
 import java.io.Serializable;
 
-public class RespuestaTimestamp implements Serializable {
+public class TimestampResponse implements Serializable {
 
 	private String selloTemporal;
 	private byte[] firmaTSA;
 
-	public RespuestaTimestamp(String selloTemporal, byte[] firmaTSA) {
+	public TimestampResponse(String selloTemporal, byte[] firmaTSA) {
 		this.selloTemporal = selloTemporal;
 		this.firmaTSA = firmaTSA;
 	}

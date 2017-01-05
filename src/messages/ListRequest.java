@@ -1,11 +1,11 @@
-package cliente.src;
+package messages;
 
 import java.io.Serializable;
 
-public class PeticionListar implements Serializable {
+public class ListRequest implements Serializable {
 	private String idPropietario;
 
-	public PeticionListar(String idPropietario) {
+	public ListRequest(String idPropietario) {
 		this.idPropietario = idPropietario;
 	}
 

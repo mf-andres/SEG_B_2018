@@ -1,8 +1,8 @@
-package cliente.src;
+package messages;
 
 import java.io.Serializable;
 
-public class PeticionRegistro implements Serializable {
+public class RegisterRequest implements Serializable {
 
 	private String nombreDoc;
 	private String idPropietario;
@@ -10,7 +10,7 @@ public class PeticionRegistro implements Serializable {
 	private byte[] firmaDoc;
 	private boolean privado;
 
-	public PeticionRegistro(String nombreDoc, String idPropietario, byte[] documento, byte[] firmaDoc,
+	public RegisterRequest(String nombreDoc, String idPropietario, byte[] documento, byte[] firmaDoc,
 			boolean privado) {
 		this.nombreDoc = nombreDoc;
 		this.idPropietario = idPropietario;

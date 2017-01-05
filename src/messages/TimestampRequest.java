@@ -1,12 +1,12 @@
-package servidor.src;
+package messages;
 
 import java.io.Serializable;
 
-public class PeticionTimestamp implements Serializable {
+public class TimestampRequest implements Serializable {
 
 	private byte[] hashDoc;
 
-	public PeticionTimestamp(byte[] hashDoc) {
+	public TimestampRequest(byte[] hashDoc) {
 		this.hashDoc = hashDoc;
 	}
 

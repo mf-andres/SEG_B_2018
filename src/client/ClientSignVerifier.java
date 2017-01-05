@@ -1,4 +1,4 @@
-package cliente.src;
+package client;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -14,7 +14,7 @@ import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 
-public class FirmaClienteVerificarServidor {
+public class ClientSignVerifier {
 
 	private static byte[] firmacliente;
 	private static PrivateKey privateKey;
@@ -23,7 +23,7 @@ public class FirmaClienteVerificarServidor {
 	private static String pathToKeyStore;
 	private static String pathToTrustStore;
 
-	public FirmaClienteVerificarServidor(String path1, String path2) {
+	public ClientSignVerifier(String path1, String path2) {
 		pathToKeyStore = path1;
 		pathToTrustStore = path2;
 	}

@@ -1,4 +1,4 @@
-package tsa.src;
+package tsa;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,8 +19,8 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.sql.Timestamp;
 
-import servidor.src.PeticionTimestamp;
-import servidor.src.RespuestaTimestamp;
+import messages.TimestampRequest;
+import messages.TimestampResponse;
 
 public class TSAConnection extends Thread {
 
@@ -39,7 +39,7 @@ public class TSAConnection extends Thread {
 					.println("***************************** Connection established ********************************\n");
 			ObjectOutputStream sendObject = new ObjectOutputStream(server.getOutputStream());
 			ObjectInputStream receivedObject = new ObjectInputStream(server.getInputStream());
-			PeticionTimestamp peticion = (PeticionTimestamp) receivedObject.readObject();
+			TimestampRequest peticion = (TimestampRequest) receivedObject.readObject();
 			String selloTemporalTSA = new Timestamp(System.currentTimeMillis()).toString();
 			System.out.println("Sello ---> " + selloTemporalTSA);
 			/********** Firma TSA ***********/
@@ -50,7 +50,7 @@ public class TSAConnection extends Thread {
 			byte[] firma = escribirfirma.toByteArray();
 			escribirfirma.close();
 			byte[] firmaTSA = firmarSelloTemporal(firma);
-			RespuestaTimestamp respuesta = new RespuestaTimestamp(selloTemporalTSA, firmaTSA);
+			TimestampResponse respuesta = new TimestampResponse(selloTemporalTSA, firmaTSA);
 			sendObject.writeObject(respuesta);
 			System.out.println("Respuesta enviada al servidor...");
 		} catch (IOException e) {

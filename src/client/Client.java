@@ -1,4 +1,4 @@
-package cliente.src;
+package client;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -26,14 +26,17 @@ import java.util.Scanner;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import servidor.src.RespuestaListar;
-import servidor.src.RespuestaRecuperar;
-import servidor.src.RespuestaRegistro;
+import messages.ListRequest;
+import messages.RetrieveRequest;
+import messages.RegisterRequest;
+import messages.ListResponse;
+import messages.RetrieveResponse;
+import messages.RegisterResponse;
 
-public class Cliente {
+public class Client {
 
 	static PrintWriter sendData;
-	static FirmaClienteVerificarServidor signer;
+	static ClientSignVerifier signer;
 	private static ObjectInputStream receivedObject;
 	private static ObjectOutputStream sendObject;
 	private static Scanner command;
@@ -99,7 +102,7 @@ public class Cliente {
 		sendData = new PrintWriter(new BufferedWriter(new OutputStreamWriter(SSLsocket.getOutputStream())), true);
 		String keyStorePath = GetKeyStorePath("clientKeyStore");
 		String trustStorePath = GetKeyStorePath("clientTrustStore");
-		signer = new FirmaClienteVerificarServidor(keyStorePath, trustStorePath);
+		signer = new ClientSignVerifier(keyStorePath, trustStorePath);
 		sendObject = new ObjectOutputStream(SSLsocket.getOutputStream());
 		receivedObject = new ObjectInputStream(SSLsocket.getInputStream());
 	}
@@ -181,10 +184,10 @@ public class Cliente {
 			System.out.println("Doc read");
 			signer.FirmarDocumento(documento);
 			boolean bPrivate = confidenciality.equalsIgnoreCase("privado") ? true : false;
-			PeticionRegistro peticion = new PeticionRegistro(docName, ownerId, documento, signer.getFirma(), bPrivate);
+			RegisterRequest peticion = new RegisterRequest(docName, ownerId, documento, signer.getFirma(), bPrivate);
 			sendObject.writeObject(peticion);
 			System.out.println("Register petition sent, waiting....");
-			RespuestaRegistro respuesta = (RespuestaRegistro) receivedObject.readObject();
+			RegisterResponse respuesta = (RegisterResponse) receivedObject.readObject();
 			if (respuesta.isCorrecto()) {
 				// only delete file if it was correct
 				doc.delete();
@@ -242,13 +245,13 @@ public class Cliente {
 			firma.close();
 			String keyStorePath = GetKeyStorePath("clientKeyStore");
 			String trustStorePath = GetKeyStorePath("clientTrustStore");
-			FirmaClienteVerificarServidor firmarcliente = new FirmaClienteVerificarServidor(keyStorePath,
+			ClientSignVerifier firmarcliente = new ClientSignVerifier(keyStorePath,
 					trustStorePath);
 			firmarcliente.FirmarDocumento(firmaCliente);
-			PeticionRecuperar peticion = new PeticionRecuperar(idPropietario, idRegistro, firmarcliente.getFirma());
+			RetrieveRequest peticion = new RetrieveRequest(idPropietario, idRegistro, firmarcliente.getFirma());
 			sendObject.writeObject(peticion);
 			System.out.println("Retrieve petition sent, waiting....");
-			RespuestaRecuperar respuesta = (RespuestaRecuperar) receivedObject.readObject();
+			RetrieveResponse respuesta = (RetrieveResponse) receivedObject.readObject();
 			/******************
 			 * Comprobar respuesta del servidor
 			 **********************/
@@ -365,12 +368,12 @@ public class Cliente {
 		sendData.println("3");
 		sendData.flush();
 
-		PeticionListar peticion = new PeticionListar(idPropietario);
+		ListRequest peticion = new ListRequest(idPropietario);
 		try {
 			sendObject.writeObject(peticion);
 			System.out.println("Peticion para recuperar enviada...");
 			System.out.println("Respuesta del servidor...\n");
-			RespuestaListar respuesta = (RespuestaListar) receivedObject.readObject();
+			ListResponse respuesta = (ListResponse) receivedObject.readObject();
 			LinkedList<String> ListaPublicos = respuesta.getListaDocPublicos();
 			LinkedList<String> ListaPrivados = respuesta.getListaDocPrivados();
 

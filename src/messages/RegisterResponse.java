@@ -1,8 +1,8 @@
-package servidor.src;
+package messages;
 
 import java.io.Serializable;
 
-public class RespuestaRegistro implements Serializable {
+public class RegisterResponse implements Serializable {
 
 	private long idRegistro;
 	private int mensaje;
@@ -10,7 +10,7 @@ public class RespuestaRegistro implements Serializable {
 	private String selloTemporal;
 	private boolean correcto;
 
-	public RespuestaRegistro(long idRegistro, int mensaje, byte[] firmaServidor, String selloTemporal,
+	public RegisterResponse(long idRegistro, int mensaje, byte[] firmaServidor, String selloTemporal,
 			boolean correcto) {
 		this.idRegistro = idRegistro;
 		this.selloTemporal = selloTemporal;

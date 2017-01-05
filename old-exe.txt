@@ -1,5 +1,0 @@
-REGISTRAR_DOCUMENTO daniel foto5.jpg privado
-REGISTRAR_DOCUMENTO guille foto6.jpg publico
-LISTAR_DOCUMENTOS alex
-LISTAR_DOCUMENTOS daniel
-EXIT

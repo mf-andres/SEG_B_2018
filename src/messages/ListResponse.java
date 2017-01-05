@@ -1,13 +1,13 @@
-package servidor.src;
+package messages;
 
 import java.io.Serializable;
 import java.util.LinkedList;
 
-public class RespuestaListar implements Serializable {
+public class ListResponse implements Serializable {
 	private LinkedList<String> ListaDocPublicos = new LinkedList<>();
 	private LinkedList<String> ListaDocPrivados = new LinkedList<>();
 
-	public RespuestaListar(LinkedList ListaDocPublicos, LinkedList ListaDocPrivados) {
+	public ListResponse(LinkedList ListaDocPublicos, LinkedList ListaDocPrivados) {
 		this.ListaDocPublicos = ListaDocPublicos;
 		this.ListaDocPrivados = ListaDocPrivados;
 	}

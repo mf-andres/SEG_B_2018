@@ -1,4 +1,4 @@
-package servidor.src;
+package server;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -29,18 +29,23 @@ import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import cliente.src.PeticionListar;
-import cliente.src.PeticionRecuperar;
-import cliente.src.PeticionRegistro;
+import messages.ListRequest;
+import messages.RetrieveRequest;
+import messages.RegisterRequest;
+import messages.TimestampRequest;
+import messages.ListResponse;
+import messages.RetrieveResponse;
+import messages.RegisterResponse;
+import messages.TimestampResponse;
 
 public class ServerConnection extends Thread {
 
 	private Socket cliente;
 	private String algCifrado;
-	private FirmarServidorValidarCliente firmarSVerificarC = new FirmarServidorValidarCliente(
+	private ServerSignVerifier firmarSVerificarC = new ServerSignVerifier(
 			GetKeyStorePath("serverKeyStore"), GetKeyStorePath("serverTrustStore"));
 	private static ArrayList<Integer> IdsRegistros = new ArrayList<>();
-	private static ArrayList<BaseDeDatos> BaseDatos = new ArrayList<>();
+	private static ArrayList<DataBase> BaseDatos = new ArrayList<>();
 	private ObjectInputStream receivedObject;
 	private ObjectOutputStream sendObject;
 
@@ -88,7 +93,7 @@ public class ServerConnection extends Thread {
 	private void registrarDocumento() {
 		int idRegistro = idRegistro();
 		try {
-			PeticionRegistro peticion = (PeticionRegistro) receivedObject.readObject();
+			RegisterRequest peticion = (RegisterRequest) receivedObject.readObject();
 			String idpropietario = peticion.getIdPropietario();
 			String nombreDoc = peticion.getNombreDoc();
 			String tipoConfidencialidad;
@@ -116,11 +121,11 @@ public class ServerConnection extends Thread {
 			ObjectOutputStream sendObjectTSA = new ObjectOutputStream(SSLsocket.getOutputStream());
 			ObjectInputStream receivedObjectTSA = new ObjectInputStream(SSLsocket.getInputStream());
 			byte[] hash = SHA256(peticion.getDocumento());
-			PeticionTimestamp request = new PeticionTimestamp(hash);
+			TimestampRequest request = new TimestampRequest(hash);
 			sendObjectTSA.writeObject(request);
 			System.out.println("Peticion para obtención de timestamp enviada al TSA...");
 			System.out.println("Esperando respuesta...");
-			RespuestaTimestamp selloTemporalTSA = (RespuestaTimestamp) receivedObjectTSA.readObject();
+			TimestampResponse selloTemporalTSA = (TimestampResponse) receivedObjectTSA.readObject();
 			/******************
 			 * Verificacion de la firma del TSA
 			 *******************/
@@ -158,25 +163,25 @@ public class ServerConnection extends Thread {
 					byte[] firmaServidor = firmarSVerificarC.getFirmaServidor();
 					/******* GUARDANDO EL ARCHIVO *******/
 					File guardado;
-					Archivo archivo;
+					Document archivo;
 					String extension = nombreDoc.split("\\.")[1];
 					if (peticion.isPrivado()) {
 						String nombre = String.valueOf(idRegistro) + "_" + idpropietario + ".sig.cif";
 						byte[] docCifrado = firmarSVerificarC.cifrarDoc(peticion.getDocumento(), algCifrado);
-						archivo = new Archivo(idRegistro, nombreDoc, extension, idpropietario, selloTemporal,
+						archivo = new Document(idRegistro, nombreDoc, extension, idpropietario, selloTemporal,
 								selloTemporalTSA.getFirmaTSA(), true, docCifrado, peticion.getFirmaDoc(), firmaServidor,
 								firmarSVerificarC.getEncoding());
-						BaseDeDatos nuevoregistro = new BaseDeDatos(idRegistro, nombreDoc, idpropietario, selloTemporal,
+						DataBase nuevoregistro = new DataBase(idRegistro, nombreDoc, idpropietario, selloTemporal,
 								true);
 						BaseDatos.add(nuevoregistro);
 						guardado = new File(nombre);
 						System.out.println("Documento guardado correctamente\nEnviando respuesta...\n");
 					} else {
 						String nombre = String.valueOf(idRegistro) + "_" + idpropietario + ".sig";
-						archivo = new Archivo(idRegistro, nombreDoc, extension, idpropietario, selloTemporal,
+						archivo = new Document(idRegistro, nombreDoc, extension, idpropietario, selloTemporal,
 								selloTemporalTSA.getFirmaTSA(), false, peticion.getDocumento(), peticion.getFirmaDoc(),
 								firmaServidor, null);
-						BaseDeDatos nuevoregistro = new BaseDeDatos(idRegistro, nombreDoc, idpropietario, selloTemporal,
+						DataBase nuevoregistro = new DataBase(idRegistro, nombreDoc, idpropietario, selloTemporal,
 								false);
 						BaseDatos.add(nuevoregistro);
 						guardado = new File(nombre);
@@ -188,15 +193,15 @@ public class ServerConnection extends Thread {
 					escribir.close();
 
 					/****** ARCHIVO GUARDADO *******/
-					RespuestaRegistro respuesta = new RespuestaRegistro(idRegistro, 1, archivo.getFirmaServidor(),
+					RegisterResponse respuesta = new RegisterResponse(idRegistro, 1, archivo.getFirmaServidor(),
 							archivo.getSelloTemporal(), true);
 					sendObject.writeObject(respuesta);
 				} else {
-					RespuestaRegistro respuesta = new RespuestaRegistro(idRegistro, 0, null, null, false);
+					RegisterResponse respuesta = new RegisterResponse(idRegistro, 0, null, null, false);
 					sendObject.writeObject(respuesta);
 				}
 			} else {
-				RespuestaRegistro respuesta = new RespuestaRegistro(idRegistro, 2, null, null, false);
+				RegisterResponse respuesta = new RegisterResponse(idRegistro, 2, null, null, false);
 				sendObject.writeObject(respuesta);
 			}
 		} catch (IOException | ClassNotFoundException | UnrecoverableEntryException | NoSuchPaddingException
@@ -232,7 +237,7 @@ public class ServerConnection extends Thread {
 	private void recuperarDocumento() {
 
 		try {
-			PeticionRecuperar peticion = (PeticionRecuperar) receivedObject.readObject();
+			RetrieveRequest peticion = (RetrieveRequest) receivedObject.readObject();
 			String idpropietario = peticion.getIdPropietario();
 			int idRegistro = peticion.getIdRegistro();
 
@@ -252,18 +257,18 @@ public class ServerConnection extends Thread {
 					boolean validoCliente;
 					validoCliente = firmarSVerificarC.verificarFirmaCliente(sigCliente, peticion.getFirmaCliente());
 					if (!validoCliente) {
-						RespuestaRecuperar respuesta = new RespuestaRecuperar(idRegistro, 2, null, null, null, null,
+						RetrieveResponse respuesta = new RetrieveResponse(idRegistro, 2, null, null, null, null,
 								null, "", false);
 						sendObject.writeObject(respuesta);
 						System.out.println("Firma cliente no valida \nEnviando respuesta...\n");
 					} else {
 						String ruta = String.valueOf(idRegistro) + "_" + idpropietario + ".sig.cif";
 						ObjectInputStream leerObjeto = new ObjectInputStream(new FileInputStream(ruta));
-						Archivo provisional = (Archivo) leerObjeto.readObject();
+						Document provisional = (Document) leerObjeto.readObject();
 						leerObjeto.close();
 						byte[] docDescifrado = firmarSVerificarC.descifrarDoc(provisional.getDoc(),
 								provisional.getEncoding(), algCifrado);
-						RespuestaRecuperar respuesta = new RespuestaRecuperar(idRegistro, 0, provisional.getExtension(),
+						RetrieveResponse respuesta = new RetrieveResponse(idRegistro, 0, provisional.getExtension(),
 								docDescifrado, provisional.getFirmaServidor(), provisional.getFirmaCliente(),
 								provisional.getFirmaTSA(), provisional.getSelloTemporal(), true);
 						sendObject.writeObject(respuesta);
@@ -272,10 +277,10 @@ public class ServerConnection extends Thread {
 				} else { // No privado
 					String ruta = String.valueOf(idRegistro) + "_" + idpropietario + ".sig";
 					ObjectInputStream leerObjeto = new ObjectInputStream(new FileInputStream(ruta));
-					Archivo provisional = (Archivo) leerObjeto.readObject();
+					Document provisional = (Document) leerObjeto.readObject();
 					leerObjeto.close();
 					byte[] docRec = provisional.getDoc();
-					RespuestaRecuperar respuesta = new RespuestaRecuperar(idRegistro, 0, provisional.getExtension(),
+					RetrieveResponse respuesta = new RetrieveResponse(idRegistro, 0, provisional.getExtension(),
 							docRec, provisional.getFirmaServidor(), provisional.getFirmaCliente(),
 							provisional.getFirmaTSA(), provisional.getSelloTemporal(), true);
 					sendObject.writeObject(respuesta);
@@ -283,7 +288,7 @@ public class ServerConnection extends Thread {
 				}
 
 			} else {
-				RespuestaRecuperar respuesta = new RespuestaRecuperar(idRegistro, 1, null, null, null, null, null, "",
+				RetrieveResponse respuesta = new RetrieveResponse(idRegistro, 1, null, null, null, null, null, "",
 						false);
 				System.out.println("Documento no existente " + idRegistro + " " + idpropietario + "\n\n");
 				sendObject.writeObject(respuesta);
@@ -296,7 +301,7 @@ public class ServerConnection extends Thread {
 
 	private void listarDocumentos() {
 		try {
-			PeticionListar peticion = (PeticionListar) receivedObject.readObject();
+			ListRequest peticion = (ListRequest) receivedObject.readObject();
 			String idpropietario = peticion.getIdPropietario();
 
 			System.out.println("Datos de la operación actual: LISTAR");
@@ -306,7 +311,7 @@ public class ServerConnection extends Thread {
 			int idRegistro;
 			String nombreDoc;
 			String selloTemporal;
-			for (BaseDeDatos registro : BaseDatos) {
+			for (DataBase registro : BaseDatos) {
 				if (registro.isPrivado()) {
 					if (registro.getIdPropietario().equalsIgnoreCase(idpropietario)) {
 						idRegistro = registro.getIdRegistro();
@@ -329,7 +334,7 @@ public class ServerConnection extends Thread {
 			if (ListaPrivados.isEmpty()) {
 				System.out.println("No hay documentos privados del propietario: " + idpropietario);
 			}
-			RespuestaListar respuesta = new RespuestaListar(ListaPublicos, ListaPrivados);
+			ListResponse respuesta = new ListResponse(ListaPublicos, ListaPrivados);
 			sendObject.writeObject(respuesta);
 			System.out.println("\nEnviando respuesta...\n");
 

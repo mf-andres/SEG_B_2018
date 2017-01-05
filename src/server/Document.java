@@ -1,8 +1,8 @@
-package servidor.src;
+package server;
 
 import java.io.Serializable;
 
-public class Archivo implements Serializable {
+public class Document implements Serializable {
 
 	private int idRegistro;
 	private String nombredoc;
@@ -16,7 +16,7 @@ public class Archivo implements Serializable {
 	private byte[] firmaTSA;
 	private byte[] encoding;
 
-	public Archivo(int idRegistro, String nombredoc, String extension, String idPropietario, String selloTemporal,
+	public Document(int idRegistro, String nombredoc, String extension, String idPropietario, String selloTemporal,
 			byte[] firmaTSA, boolean privado, byte[] doc, byte[] firmaCliente, byte[] firmaServidor, byte[] encoding) {
 		this.idRegistro = idRegistro;
 		this.nombredoc = nombredoc;

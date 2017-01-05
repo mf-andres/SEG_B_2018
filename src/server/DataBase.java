@@ -1,6 +1,6 @@
-package servidor.src;
+package server;
 
-public class BaseDeDatos {
+public class DataBase {
 
 	private int idRegistro;
 	private String nombredoc;
@@ -8,7 +8,7 @@ public class BaseDeDatos {
 	private String selloTemporal;
 	private boolean privado;
 
-	public BaseDeDatos(int idRegistro, String nombredoc, String idPropietario, String selloTemporal, boolean privado) {
+	public DataBase(int idRegistro, String nombredoc, String idPropietario, String selloTemporal, boolean privado) {
 		this.idRegistro = idRegistro;
 		this.nombredoc = nombredoc;
 		this.idPropietario = idPropietario;

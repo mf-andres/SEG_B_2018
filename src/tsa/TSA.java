@@ -1,4 +1,4 @@
-package tsa.src;
+package tsa;
 
 import java.io.IOException;
 import java.net.ServerSocket;
