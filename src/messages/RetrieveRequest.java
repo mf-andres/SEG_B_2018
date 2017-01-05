@@ -4,25 +4,25 @@ import java.io.Serializable;
 
 public class RetrieveRequest implements Serializable {
 
-	private String idPropietario;
-	private int idRegistro;
-	byte[] firmaCliente;
+	private String ownerId;
+	private int registerId;
+	byte[] clientSign;
 
-	public RetrieveRequest(String idPropietario, int idRegistro, byte[] firmaCliente) {
-		this.idPropietario = idPropietario;
-		this.idRegistro = idRegistro;
-		this.firmaCliente = firmaCliente;
+	public RetrieveRequest(String ownerId, int registerId, byte[] clientSign) {
+		this.ownerId = ownerId;
+		this.registerId = registerId;
+		this.clientSign = clientSign;
 	}
 
 	public int getRegisterId() {
-		return idRegistro;
+		return registerId;
 	}
 
 	public String getOwnerId() {
-		return idPropietario;
+		return ownerId;
 	}
 
 	public byte[] getClientSign() {
-		return firmaCliente;
+		return clientSign;
 	}
 }

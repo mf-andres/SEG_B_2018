@@ -4,38 +4,38 @@ import java.io.Serializable;
 
 public class RegisterResponse implements Serializable {
 
-	private long idRegistro;
-	private int mensaje;
-	byte[] firmaServidor;
-	private String selloTemporal;
-	private boolean correcto;
+	private long registerId;
+	private int message;
+	byte[] serverSign;
+	private String timestamp;
+	private boolean valid;
 
-	public RegisterResponse(long idRegistro, int mensaje, byte[] firmaServidor, String selloTemporal,
-			boolean correcto) {
-		this.idRegistro = idRegistro;
-		this.selloTemporal = selloTemporal;
-		this.mensaje = mensaje;
-		this.firmaServidor = firmaServidor;
-		this.correcto = correcto;
+	public RegisterResponse(long registerId, int message, byte[] serverSign, String timestap,
+			boolean valid) {
+		this.registerId = registerId;
+		this.timestamp = timestap;
+		this.message = message;
+		this.serverSign = serverSign;
+		this.valid = valid;
 	}
 
-	public long getIdRegistro() {
-		return idRegistro;
+	public long getRegisterId() {
+		return registerId;
 	}
 
-	public int getMensaje() {
-		return mensaje;
+	public int getMessage() {
+		return message;
 	}
 
-	public boolean isCorrecto() {
-		return correcto;
+	public boolean isValid() {
+		return valid;
 	}
 
-	public byte[] getFirmaServidor() {
-		return firmaServidor;
+	public byte[] getServerSign() {
+		return serverSign;
 	}
 
-	public String getSelloTemporal() {
-		return selloTemporal;
+	public String getTimestamp() {
+		return timestamp;
 	}
 }

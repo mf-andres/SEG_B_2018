@@ -3,13 +3,13 @@ package messages;
 import java.io.Serializable;
 
 public class ListRequest implements Serializable {
-	private String idPropietario;
+	private String ownerId;
 
-	public ListRequest(String idPropietario) {
-		this.idPropietario = idPropietario;
+	public ListRequest(String ownerId) {
+		this.ownerId = ownerId;
 	}
 
 	public String getOwnerId() {
-		return idPropietario;
+		return ownerId;
 	}
 }

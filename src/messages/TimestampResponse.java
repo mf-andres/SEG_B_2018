@@ -4,19 +4,19 @@ import java.io.Serializable;
 
 public class TimestampResponse implements Serializable {
 
-	private String selloTemporal;
-	private byte[] firmaTSA;
+	private String timestamp;
+	private byte[] TSASign;
 
-	public TimestampResponse(String selloTemporal, byte[] firmaTSA) {
-		this.selloTemporal = selloTemporal;
-		this.firmaTSA = firmaTSA;
+	public TimestampResponse(String timestamp, byte[] TSASign) {
+		this.timestamp = timestamp;
+		this.TSASign = TSASign;
 	}
 
 	public String getTimeStamp() {
-		return selloTemporal;
+		return timestamp;
 	}
 
 	public byte[] getTSASign() {
-		return firmaTSA;
+		return TSASign;
 	}
 }

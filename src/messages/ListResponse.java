@@ -4,19 +4,19 @@ import java.io.Serializable;
 import java.util.LinkedList;
 
 public class ListResponse implements Serializable {
-	private LinkedList<String> ListaDocPublicos = new LinkedList<>();
-	private LinkedList<String> ListaDocPrivados = new LinkedList<>();
+	private LinkedList<String> publicList = new LinkedList<>();
+	private LinkedList<String> privateList = new LinkedList<>();
 
-	public ListResponse(LinkedList ListaDocPublicos, LinkedList ListaDocPrivados) {
-		this.ListaDocPublicos = ListaDocPublicos;
-		this.ListaDocPrivados = ListaDocPrivados;
+	public ListResponse(LinkedList publicList, LinkedList privateList) {
+		this.publicList = publicList;
+		this.privateList = privateList;
 	}
 
-	public LinkedList<String> getListaDocPublicos() {
-		return ListaDocPublicos;
+	public LinkedList<String> getPublicList() {
+		return publicList;
 	}
 
-	public LinkedList<String> getListaDocPrivados() {
-		return ListaDocPrivados;
+	public LinkedList<String> getPrivateList() {
+		return privateList;
 	}
 }

@@ -4,32 +4,40 @@ import java.io.Serializable;
 
 public class RetrieveResponse implements Serializable {
 
-	private long idRegistro;
-	private int mensaje;
-	byte[] firmaServidor;
+	private long registerId;
+	private int message;
+	byte[] serverSign;
 	private byte[] doc;
 	private String extension;
-	private String selloTemporal;
-	private boolean correcto;
-	private byte[] firmaCliente;
-	private byte[] firmaTSA;
+	private String timestamp;
+	private boolean valid;
+	private byte[] clientSign;
+	private byte[] TSASign;
 
-	public RetrieveResponse(long idRegistro, int mensaje, String extension, byte[] doc, byte[] firmaServidor,
-			byte[] firmaCliente, byte[] firmaTSA, String selloTemporal, boolean correcto) {
-		this.idRegistro = idRegistro;
-		this.selloTemporal = selloTemporal;
+	public RetrieveResponse(long registerId, int message, String extension, byte[] doc, byte[] serverSign,
+			byte[] clientSign, byte[] TSASign, String timestamp, boolean valid) {
+		this.registerId = registerId;
+		this.timestamp = timestamp;
 		this.doc = doc;
 		this.extension = extension;
-		this.mensaje = mensaje;
-		this.firmaCliente = firmaCliente;
-		this.firmaServidor = firmaServidor;
-		this.correcto = correcto;
-		this.firmaTSA = firmaTSA;
+		this.message = message;
+		this.clientSign = clientSign;
+		this.serverSign = serverSign;
+		this.valid = valid;
+		this.TSASign = TSASign;
 
 	}
 
-	public byte[] getFirmaTSA() {
-		return firmaTSA;
+	public byte[] getServerSign() {
+		return serverSign;
+	}
+
+	public byte[] getClientSign() {
+		return clientSign;
+	}
+
+	public byte[] getTSASign() {
+		return TSASign;
 	}
 
 	public String getExtension() {
@@ -40,27 +48,19 @@ public class RetrieveResponse implements Serializable {
 		return doc;
 	}
 
-	public long getIdRegistro() {
-		return idRegistro;
+	public long getRegisterId() {
+		return registerId;
 	}
 
-	public int getMensaje() {
-		return mensaje;
+	public int getMessage() {
+		return message;
 	}
 
-	public boolean isCorrecto() {
-		return correcto;
+	public boolean isValid() {
+		return valid;
 	}
 
-	public byte[] getFirmaServidor() {
-		return firmaServidor;
-	}
-
-	public byte[] getFirmaCliente() {
-		return firmaCliente;
-	}
-
-	public String getSelloTemporal() {
-		return selloTemporal;
+	public String getTimestamp() {
+		return timestamp;
 	}
 }

@@ -4,38 +4,38 @@ import java.io.Serializable;
 
 public class RegisterRequest implements Serializable {
 
-	private String nombreDoc;
-	private String idPropietario;
-	private byte[] documento;
-	private byte[] firmaDoc;
-	private boolean privado;
+	private String docName;
+	private String ownerId;
+	private byte[] doc;
+	private byte[] docSign;
+	private boolean bPrivate;
 
-	public RegisterRequest(String nombreDoc, String idPropietario, byte[] documento, byte[] firmaDoc,
+	public RegisterRequest(String docName, String ownerId, byte[] document, byte[] docSign,
 			boolean privado) {
-		this.nombreDoc = nombreDoc;
-		this.idPropietario = idPropietario;
-		this.documento = documento;
-		this.firmaDoc = firmaDoc;
-		this.privado = privado;
+		this.docName = docName;
+		this.ownerId = ownerId;
+		this.doc = document;
+		this.docSign = docSign;
+		this.bPrivate = privado;
 	}
 
 	public String getDocName() {
-		return nombreDoc;
+		return docName;
 	}
 
 	public String getOwnerId() {
-		return idPropietario;
+		return ownerId;
 	}
 
 	public byte[] getDocument() {
-		return documento;
+		return doc;
 	}
 
 	public byte[] getDocSign() {
-		return firmaDoc;
+		return docSign;
 	}
 
 	public boolean isPrivate() {
-		return privado;
+		return bPrivate;
 	}
 }

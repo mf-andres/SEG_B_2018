@@ -188,19 +188,19 @@ public class Client {
 			sendObject.writeObject(peticion);
 			System.out.println("Register petition sent, waiting....");
 			RegisterResponse respuesta = (RegisterResponse) receivedObject.readObject();
-			if (respuesta.isCorrecto()) {
+			if (respuesta.isValid()) {
 				// only delete file if it was correct
 				doc.delete();
 				System.out.println("Documento correctamente registrado");
-				debug = "IdRegistro: " + respuesta.getIdRegistro() + "\nTimeStamp: " + respuesta.getSelloTemporal();
-				debug += "\nFirma del servidor: " + respuesta.getFirmaServidor().toString();
+				debug = "IdRegistro: " + respuesta.getRegisterId() + "\nTimeStamp: " + respuesta.getTimestamp();
+				debug += "\nFirma del servidor: " + respuesta.getServerSign().toString();
 				System.out.println(debug);
 				// HASH
-				String hashD = "hash_" + String.valueOf(respuesta.getIdRegistro()) + ownerId + ".txt";
+				String hashD = "hash_" + String.valueOf(respuesta.getRegisterId()) + ownerId + ".txt";
 				byte[] hashDoc = SHA256(documento);
 				Files.write(Paths.get(hashD), hashDoc);
 			} else {
-				int error = respuesta.getMensaje();
+				int error = respuesta.getMessage();
 				String mensaje;
 				switch (error) {
 				case 1:
@@ -254,34 +254,34 @@ public class Client {
 			/******************
 			 * Comprobar respuesta del servidor
 			 **********************/
-			if (respuesta.isCorrecto()) {
+			if (respuesta.isValid()) {
 				/********************
 				 * VALIDAR FIRMA TSA
 				 ******************************/
 				ByteArrayOutputStream writefirma = new ByteArrayOutputStream();
 				DataOutputStream esc = new DataOutputStream(writefirma);
 				esc.write(SHA256(respuesta.getDoc()));
-				esc.writeUTF(respuesta.getSelloTemporal());
+				esc.writeUTF(respuesta.getTimestamp());
 				byte[] firmaTSA = writefirma.toByteArray();
 				writefirma.close();
-				boolean validoTSA = firmarcliente.verificarFirmaTSA(firmaTSA, respuesta.getFirmaTSA());
+				boolean validoTSA = firmarcliente.verificarFirmaTSA(firmaTSA, respuesta.getTSASign());
 				if (validoTSA) {
 					/******* Validar firma servidor ****/
 					ByteArrayOutputStream escribirfirma = new ByteArrayOutputStream();
 					DataOutputStream escribir = new DataOutputStream(escribirfirma);
 					escribir.writeInt(idRegistro);
-					escribir.writeUTF(respuesta.getSelloTemporal());
+					escribir.writeUTF(respuesta.getTimestamp());
 					escribir.write(respuesta.getDoc());
-					escribir.write(respuesta.getFirmaCliente());
+					escribir.write(respuesta.getClientSign());
 
 					byte[] sigServ = escribirfirma.toByteArray();
 					escribirfirma.close();
-					boolean valida = firmarcliente.verificarServidor(sigServ, respuesta.getFirmaServidor());
+					boolean valida = firmarcliente.verificarServidor(sigServ, respuesta.getServerSign());
 					if (valida) {
 						/******* Firma servidor validada ****/
 
 						File recuperado = new File(
-								"recuperado_" + respuesta.getIdRegistro() + "." + respuesta.getExtension());
+								"recuperado_" + respuesta.getRegisterId() + "." + respuesta.getExtension());
 						DataOutputStream nuevofichero = new DataOutputStream(new FileOutputStream(recuperado));
 						nuevofichero.write(respuesta.getDoc());
 						nuevofichero.close();
@@ -294,9 +294,9 @@ public class Client {
 						 *************************/
 						if (ficherosIguales) {
 							System.out.println("Documento recuperado correctamente");
-							System.out.println("IdRegistro: " + respuesta.getIdRegistro());
-							System.out.println("Sello temporal: " + respuesta.getSelloTemporal());
-							System.out.println("Firma del servidor: " + respuesta.getFirmaServidor().toString());
+							System.out.println("IdRegistro: " + respuesta.getRegisterId());
+							System.out.println("Sello temporal: " + respuesta.getTimestamp());
+							System.out.println("Firma del servidor: " + respuesta.getServerSign().toString());
 						} else {
 							System.out.println("Documento alterado por el registrador");
 						}
@@ -304,7 +304,7 @@ public class Client {
 					}
 				}
 			} else {
-				int error = respuesta.getMensaje();
+				int error = respuesta.getMessage();
 				String mensaje;
 				switch (error) {
 				case 1:
@@ -373,8 +373,8 @@ public class Client {
 			System.out.println("Peticion para recuperar enviada...");
 			System.out.println("Respuesta del servidor...\n");
 			ListResponse respuesta = (ListResponse) receivedObject.readObject();
-			LinkedList<String> ListaPublicos = respuesta.getListaDocPublicos();
-			LinkedList<String> ListaPrivados = respuesta.getListaDocPrivados();
+			LinkedList<String> ListaPublicos = respuesta.getPublicList();
+			LinkedList<String> ListaPrivados = respuesta.getPrivateList();
 
 			System.out.println("Documentos publicos:");
 			if (ListaPublicos.isEmpty()) {
