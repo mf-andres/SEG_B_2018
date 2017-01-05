@@ -19,23 +19,23 @@ public class RegisterRequest implements Serializable {
 		this.privado = privado;
 	}
 
-	public String getNombreDoc() {
+	public String getDocName() {
 		return nombreDoc;
 	}
 
-	public String getIdPropietario() {
+	public String getOwnerId() {
 		return idPropietario;
 	}
 
-	public byte[] getDocumento() {
+	public byte[] getDocument() {
 		return documento;
 	}
 
-	public byte[] getFirmaDoc() {
+	public byte[] getDocSign() {
 		return firmaDoc;
 	}
 
-	public boolean isPrivado() {
+	public boolean isPrivate() {
 		return privado;
 	}
 }

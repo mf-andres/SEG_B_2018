@@ -27,11 +27,11 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import messages.ListRequest;
-import messages.RetrieveRequest;
-import messages.RegisterRequest;
 import messages.ListResponse;
-import messages.RetrieveResponse;
+import messages.RegisterRequest;
 import messages.RegisterResponse;
+import messages.RetrieveRequest;
+import messages.RetrieveResponse;
 
 public class Client {
 
@@ -245,8 +245,7 @@ public class Client {
 			firma.close();
 			String keyStorePath = GetKeyStorePath("clientKeyStore");
 			String trustStorePath = GetKeyStorePath("clientTrustStore");
-			ClientSignVerifier firmarcliente = new ClientSignVerifier(keyStorePath,
-					trustStorePath);
+			ClientSignVerifier firmarcliente = new ClientSignVerifier(keyStorePath, trustStorePath);
 			firmarcliente.FirmarDocumento(firmaCliente);
 			RetrieveRequest peticion = new RetrieveRequest(idPropietario, idRegistro, firmarcliente.getFirma());
 			sendObject.writeObject(peticion);
@@ -337,7 +336,7 @@ public class Client {
 
 		byte[] hashDocRec = SHA256(docRecuperado);
 		if (hashDoc.length != hashDocRec.length) {
-			System.out.println("Hash de diferentes tamaños");
+			System.out.println("Hash de diferentes tama�os");
 			return false;
 		}
 		if (Arrays.equals(hashDoc, hashDocRec)) {
@@ -377,20 +376,20 @@ public class Client {
 			LinkedList<String> ListaPublicos = respuesta.getListaDocPublicos();
 			LinkedList<String> ListaPrivados = respuesta.getListaDocPrivados();
 
-			System.out.println("\n***Documentos públicos:");
+			System.out.println("Documentos publicos:");
 			if (ListaPublicos.isEmpty()) {
-				System.out.println("No hay documentos públicos");
+				System.out.println("\tNo hay documentos publicos");
 			} else {
 				for (String doc : ListaPublicos) {
-					System.out.println("- " + doc);
+					System.out.println("\t- " + doc);
 				}
 			}
-			System.out.println("\n***Documentos privados:");
+			System.out.println("Documentos privados:");
 			if (ListaPrivados.isEmpty()) {
-				System.out.println("No hay documentos privados del propietario:" + idPropietario);
+				System.out.println("\tNo hay documentos privados del propietario:" + idPropietario);
 			} else {
 				for (String doc : ListaPrivados) {
-					System.out.println("- " + doc);
+					System.out.println("\t- " + doc);
 				}
 			}
 		} catch (IOException | ClassNotFoundException e) {
@@ -400,8 +399,6 @@ public class Client {
 	}
 
 	public static void SetKeystores(String[] args) {
-		System.out.println(
-				"Valores de los stores (Cliente): \n(keyStoreFile) passKeystore (trustStoreFile) passTruststore\n");
 		String keyStore = args[0];
 		String trustStore = args[2];
 		String passwKS = args[1];

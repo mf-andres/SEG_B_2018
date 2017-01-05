@@ -37,7 +37,7 @@ public class ServerSignVerifier {
 		pathToTrustStore = path2;
 	}
 
-	public void firmarServidor(byte[] doc) {
+	public void serverSign(byte[] doc) {
 		try {
 			String algoritmo;
 			int longbloque;
@@ -69,11 +69,11 @@ public class ServerSignVerifier {
 
 	}
 
-	public byte[] getFirmaServidor() {
+	public byte[] getServerSign() {
 		return firma;
 	}
 
-	public boolean verificarFirmaCliente(byte[] sigCliente, byte[] firmacliente)
+	public boolean verifyClientSign(byte[] sigCliente, byte[] firmacliente)
 			throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
 		String algoritmo;
 		int longbloque;
@@ -105,7 +105,7 @@ public class ServerSignVerifier {
 
 	}
 
-	public byte[] cifrarDoc(byte[] doc, String algCifrado) throws KeyStoreException, IOException, CertificateException,
+	public byte[] cypherDoc(byte[] doc, String algCifrado) throws KeyStoreException, IOException, CertificateException,
 			NoSuchAlgorithmException, UnrecoverableEntryException, InvalidKeyException, NoSuchPaddingException,
 			BadPaddingException, IllegalBlockSizeException {
 
@@ -162,7 +162,7 @@ public class ServerSignVerifier {
 		return encoding;
 	}
 
-	public byte[] descifrarDoc(byte[] docCifrado, byte[] encoding, String algCifrado) throws Exception {
+	public byte[] descypherDoc(byte[] docCifrado, byte[] encoding, String algCifrado) throws Exception {
 
 		System.out.println("Descifrando documento...");
 
@@ -271,7 +271,7 @@ public class ServerSignVerifier {
 		publicKeyTSA = publickey;
 	}
 
-	public boolean verificarFirmaTSA(byte[] sigTSA, byte[] firmacliente)
+	public boolean verifyTSASign(byte[] sigTSA, byte[] firmacliente)
 			throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
 		String algoritmo = "SHA1withDSA";
 		int longbloque;

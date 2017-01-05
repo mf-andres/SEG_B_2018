@@ -12,11 +12,11 @@ public class TimestampResponse implements Serializable {
 		this.firmaTSA = firmaTSA;
 	}
 
-	public String getSelloTemporal() {
+	public String getTimeStamp() {
 		return selloTemporal;
 	}
 
-	public byte[] getFirmaTSA() {
+	public byte[] getTSASign() {
 		return firmaTSA;
 	}
 }

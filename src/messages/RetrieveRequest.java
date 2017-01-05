@@ -14,15 +14,15 @@ public class RetrieveRequest implements Serializable {
 		this.firmaCliente = firmaCliente;
 	}
 
-	public int getIdRegistro() {
+	public int getRegisterId() {
 		return idRegistro;
 	}
 
-	public String getIdPropietario() {
+	public String getOwnerId() {
 		return idPropietario;
 	}
 
-	public byte[] getFirmaCliente() {
+	public byte[] getClientSign() {
 		return firmaCliente;
 	}
 }

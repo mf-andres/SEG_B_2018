@@ -16,23 +16,23 @@ public class DataBase {
 		this.privado = privado;
 	}
 
-	public int getIdRegistro() {
+	public int getRegisterId() {
 		return idRegistro;
 	}
 
-	public String getIdPropietario() {
+	public String getOwnerId() {
 		return idPropietario;
 	}
 
-	public String getNombredoc() {
+	public String getDocName() {
 		return nombredoc;
 	}
 
-	public String getSelloTemporal() {
+	public String getTimestamp() {
 		return selloTemporal;
 	}
 
-	public boolean isPrivado() {
+	public boolean isPrivate() {
 		return privado;
 	}
 

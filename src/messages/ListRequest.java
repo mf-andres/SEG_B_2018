@@ -9,7 +9,7 @@ public class ListRequest implements Serializable {
 		this.idPropietario = idPropietario;
 	}
 
-	public String getIdPropietario() {
+	public String getOwnerId() {
 		return idPropietario;
 	}
 }

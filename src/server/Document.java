@@ -32,7 +32,7 @@ public class Document implements Serializable {
 
 	}
 
-	public byte[] getFirmaTSA() {
+	public byte[] getTSASign() {
 		return firmaTSA;
 	}
 
@@ -52,7 +52,7 @@ public class Document implements Serializable {
 		return nombredoc;
 	}
 
-	public String getSelloTemporal() {
+	public String getTimestamp() {
 		return selloTemporal;
 	}
 
@@ -64,11 +64,11 @@ public class Document implements Serializable {
 		return privado;
 	}
 
-	public byte[] getFirmaCliente() {
+	public byte[] getClientSign() {
 		return firmaCliente;
 	}
 
-	public byte[] getFirmaServidor() {
+	public byte[] getServerSign() {
 		return firmaServidor;
 	}
 
