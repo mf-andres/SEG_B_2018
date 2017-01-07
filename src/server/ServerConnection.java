@@ -110,7 +110,7 @@ public class ServerConnection extends Thread {
 
 				String timestamp = timeResponse.getTimeStamp();
 				/************* Verifican firma cliente *********************/
-				boolean docVerified = serverSigner.verifyClientSign(registerRequest.getDocument(),
+				boolean docVerified = serverSigner.VerifyClientSign(registerRequest.getDocument(),
 						registerRequest.getDocSign());
 				if (docVerified) {
 					byte[] serverSign = GetMySign(id, registerRequest, timestamp);
@@ -143,7 +143,7 @@ public class ServerConnection extends Thread {
 		byte[] sign = writeSign.toByteArray();
 		writeSign.close();
 
-		serverSigner.serverSign(sign);
+		serverSigner.ServerSign(sign);
 		byte[] serverSign = serverSigner.getServerSign();
 		return serverSign;
 	}
@@ -158,7 +158,7 @@ public class ServerConnection extends Thread {
 		String name = String.valueOf(id) + "_" + ownerId + ".sig";
 		if (registerRequest.isPrivate()) {
 			name = ".cif";
-			byte[] cypheredDoc = serverSigner.cypherDoc(registerRequest.getDocument(), cypherAlgorithm);
+			byte[] cypheredDoc = serverSigner.CypherDoc(registerRequest.getDocument(), cypherAlgorithm);
 			document = new Document(id, docName, extension, ownerId, timestamp, timeResponse.getTSASign(), true,
 					cypheredDoc, registerRequest.getDocSign(), serverSign, serverSigner.getEncoding());
 			DataBase newRegister = new DataBase(id, docName, ownerId, timestamp, true);
@@ -291,7 +291,7 @@ public class ServerConnection extends Thread {
 		writer.writeInt(registerId);
 		byte[] clientSign = signWriter.toByteArray();
 		signWriter.close();
-		if (!serverSigner.verifyClientSign(clientSign, request.getClientSign())) {
+		if (!serverSigner.VerifyClientSign(clientSign, request.getClientSign())) {
 			RetrieveResponse response = new RetrieveResponse(registerId, 2, null, null, null, null, null, "", false);
 			sendObject.writeObject(response);
 			System.out.println("Client sign is not valid \nSending response...\n");
@@ -300,7 +300,7 @@ public class ServerConnection extends Thread {
 			ObjectInputStream objectStream = new ObjectInputStream(new FileInputStream(path));
 			Document temp = (Document) objectStream.readObject();
 			objectStream.close();
-			byte[] decypheredDoc = serverSigner.descypherDoc(temp.getDoc(), temp.getEncoding(), cypherAlgorithm);
+			byte[] decypheredDoc = serverSigner.DecypherDoc(temp.getDoc(), temp.getEncoding(), cypherAlgorithm);
 			RetrieveResponse response = new RetrieveResponse(registerId, 0, temp.getExtension(), decypheredDoc,
 					temp.getServerSign(), temp.getClientSign(), temp.getTSASign(), temp.getTimestamp(), true);
 			sendObject.writeObject(response);

@@ -16,7 +16,7 @@ import java.security.cert.CertificateException;
 
 public class ClientSignVerifier {
 
-	private static byte[] firmacliente;
+	private static byte[] clientSign;
 	private static PrivateKey privateKey;
 	private static PublicKey publicKey;
 	private static PublicKey publicKeyTSA;
@@ -28,88 +28,60 @@ public class ClientSignVerifier {
 		pathToTrustStore = path2;
 	}
 
-	public void FirmarDocumento(byte[] documento) {
+	public void FirmarDocumento(byte[] doc) {
 		try {
-			String algoritmo;
-			int longbloque;
-			byte bloque[] = new byte[1024];
+			int blockSize;
+			byte block[] = new byte[1024];
 
-			ClavePrivada();
-			ByteArrayInputStream mensaje = new ByteArrayInputStream(documento);
-
-			if (privateKey.getAlgorithm().equalsIgnoreCase("RSA")) {
-				algoritmo = "MD5withRSA";
-			} else {
-				algoritmo = "SHA1withDSA";
-			}
+			PrivateKey();
+			ByteArrayInputStream msg = new ByteArrayInputStream(doc);
+			String algorithm = privateKey.getAlgorithm().equalsIgnoreCase("RSA") ? "MD5withRSA" : "SHA1withDSA";
 			// Creacion del objeto para firmar y inicializacion del objeto
-			Signature signer = Signature.getInstance(algoritmo);
+			Signature signer = Signature.getInstance(algorithm);
 			signer.initSign(privateKey);
-			while ((longbloque = mensaje.read(bloque)) > 0) {
-				signer.update(bloque, 0, longbloque);
+			while ((blockSize = msg.read(block)) > 0) {
+				signer.update(block, 0, blockSize);
 			}
-			firmacliente = signer.sign();
-			System.out.println("Documento firmado. Firma: ");
-			for (int i = 0; i < firmacliente.length; i++)
-				System.out.print(firmacliente[i] + " ");
-			System.out.println("\n---- Fin de la firma ----\n");
-			mensaje.close();
-
-		} catch (NoSuchAlgorithmException e) {
-			System.out.println("Error: algoritmo de encriptacion no valido" + e.getMessage());
-			// e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			System.out.println("Error: clave inválida" + e.getMessage());
-			// e.printStackTrace();
-		} catch (SignatureException e) {
-			System.out.println("Error: firma del cliente no valida" + e.getMessage());
-			// e.printStackTrace();
-		} catch (IOException e) {
-			System.out.println("ERROR: " + e.getMessage());
-			// e.printStackTrace();
-		} catch (CertificateException | KeyStoreException | UnrecoverableEntryException e) {
-			e.printStackTrace();
+			clientSign = signer.sign();
+			System.out.println("Doc signed. Sign: \n\t");
+			for (int i = 0; i < clientSign.length; i++)
+				System.out.print(clientSign[i] + " ");
+			System.out.println("\nEND\n");
+			msg.close();
+		} catch (Exception e) {
+			System.out.println("Error signing doc:: " + e.getMessage());
 		}
-
 	}
 
-	public byte[] getFirma() {
-		return firmacliente;
+	public byte[] getSign() {
+		return clientSign;
 	}
 
-	public boolean verificarServidor(byte[] sigServC, byte[] firmaServ) throws Exception {
+	public boolean VerifyServer(byte[] sigServC, byte[] servSign) throws Exception {
 
-		String algoritmo;
-		int longbloque;
-		byte bloque[] = new byte[1024];
+		int blockSize;
+		byte block[] = new byte[1024];
 
-		System.out.println("Inicio de la verificación del servidor...");
-		ByteArrayInputStream validar = new ByteArrayInputStream(sigServC);
-		ClavePublica();
-		if (publicKey.getAlgorithm().equalsIgnoreCase("RSA")) {
-			algoritmo = "MD5withRSA";
-		} else {
-			algoritmo = "SHA1withDSA";
-		}
+		System.out.println("Verifying server: \n");
+		ByteArrayInputStream validate = new ByteArrayInputStream(sigServC);
+		PublicKey();
+		String algorithm = publicKey.getAlgorithm().equalsIgnoreCase("RSA") ? "MD5withRSA" : "SHA1withDSA";
 		// Creamos un objeto para verificar
-		Signature verifier = Signature.getInstance(algoritmo);
+		Signature verifier = Signature.getInstance(algorithm);
 
 		// Inicializamos el objeto para verificar
 		verifier.initVerify(publicKey);
-		while ((longbloque = validar.read(bloque)) > 0) {
-			verifier.update(bloque, 0, longbloque);
+		while ((blockSize = validate.read(block)) > 0) {
+			verifier.update(block, 0, blockSize);
 		}
-		validar.close();
-		if (verifier.verify(firmaServ)) {
-			System.out.println("Firma del servidor correcta");
-			return true;
-		} else {
-			System.out.println("Fallo de firma registrador");
-			return false;
-		}
+		validate.close();
+		boolean toRet = verifier.verify(servSign);
+		String toPrint = toRet ? "\tValid" : "\tNot valid";
+		System.out.println(toPrint);
+		return toRet;
 	}
 
-	private static PrivateKey ClavePrivada() throws KeyStoreException, IOException, UnrecoverableEntryException,
+	private static PrivateKey PrivateKey() throws KeyStoreException, IOException, UnrecoverableEntryException,
 			NoSuchAlgorithmException, CertificateException {
 
 		KeyStore keyStore;
@@ -125,10 +97,9 @@ public class ClientSignVerifier {
 		return privateKey;
 	}
 
-	private static void ClavePublica() throws Exception {
+	private static void PublicKey() throws Exception {
 		KeyStore keyStore;
 		char[] passwordKeystore = "123456".toCharArray();
-		// String SKServidor = "autenserv_rsa";
 		String SKServidor = "server_dsa";
 
 		keyStore = KeyStore.getInstance("JCEKS");
@@ -137,30 +108,30 @@ public class ClientSignVerifier {
 		publicKey = keyStore.getCertificate(SKServidor).getPublicKey();
 	}
 
-	private static void ClavePublicaTSA() {
+	private static void TSAPublicKey() {
 
 		KeyStore keyStore;
 		char[] passwordKeystore = "123456".toCharArray();
 
-		String SKCliente = "tsa_dsa";
+		String SKClient = "tsa_dsa";
 		PublicKey publickey = null;
 		try {
 			keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(new FileInputStream(pathToTrustStore), passwordKeystore);
-			publickey = keyStore.getCertificate(SKCliente).getPublicKey();
+			publickey = keyStore.getCertificate(SKClient).getPublicKey();
 		} catch (CertificateException | IOException | NoSuchAlgorithmException | KeyStoreException e) {
 			e.printStackTrace();
 		}
 		publicKeyTSA = publickey;
 	}
 
-	public boolean verificarFirmaTSA(byte[] sigTSA, byte[] firmacliente)
+	public boolean VerifyTSASign(byte[] sigTSA, byte[] clientSign)
 			throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
-		String algoritmo = "SHA1withDSA";
-		int longbloque;
-		byte bloque[] = new byte[1024];
+		String algorithm = "SHA1withDSA";
+		int blockSize;
+		byte block[] = new byte[1024];
 
-		System.out.println("Inicio de la verificaci�n del TSA...");
+		System.out.println("Start with TSA verifying ");
 		ByteArrayInputStream validar = new ByteArrayInputStream(sigTSA);
 		// ClavePublicaTSA();
 		// Creacion del objeto para firmar y inicializacion del objeto

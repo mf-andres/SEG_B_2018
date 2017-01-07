@@ -184,7 +184,7 @@ public class Client {
 			System.out.println("Doc read");
 			signer.FirmarDocumento(documento);
 			boolean bPrivate = confidenciality.equalsIgnoreCase("privado") ? true : false;
-			RegisterRequest peticion = new RegisterRequest(docName, ownerId, documento, signer.getFirma(), bPrivate);
+			RegisterRequest peticion = new RegisterRequest(docName, ownerId, documento, signer.getSign(), bPrivate);
 			sendObject.writeObject(peticion);
 			System.out.println("Register petition sent, waiting....");
 			RegisterResponse respuesta = (RegisterResponse) receivedObject.readObject();
@@ -247,7 +247,7 @@ public class Client {
 			String trustStorePath = GetKeyStorePath("clientTrustStore");
 			ClientSignVerifier firmarcliente = new ClientSignVerifier(keyStorePath, trustStorePath);
 			firmarcliente.FirmarDocumento(firmaCliente);
-			RetrieveRequest peticion = new RetrieveRequest(idPropietario, idRegistro, firmarcliente.getFirma());
+			RetrieveRequest peticion = new RetrieveRequest(idPropietario, idRegistro, firmarcliente.getSign());
 			sendObject.writeObject(peticion);
 			System.out.println("Retrieve petition sent, waiting....");
 			RetrieveResponse respuesta = (RetrieveResponse) receivedObject.readObject();
@@ -264,7 +264,7 @@ public class Client {
 				esc.writeUTF(respuesta.getTimestamp());
 				byte[] firmaTSA = writefirma.toByteArray();
 				writefirma.close();
-				boolean validoTSA = firmarcliente.verificarFirmaTSA(firmaTSA, respuesta.getTSASign());
+				boolean validoTSA = firmarcliente.VerifyTSASign(firmaTSA, respuesta.getTSASign());
 				if (validoTSA) {
 					/******* Validar firma servidor ****/
 					ByteArrayOutputStream escribirfirma = new ByteArrayOutputStream();
@@ -276,7 +276,7 @@ public class Client {
 
 					byte[] sigServ = escribirfirma.toByteArray();
 					escribirfirma.close();
-					boolean valida = firmarcliente.verificarServidor(sigServ, respuesta.getServerSign());
+					boolean valida = firmarcliente.VerifyServer(sigServ, respuesta.getServerSign());
 					if (valida) {
 						/******* Firma servidor validada ****/
 
