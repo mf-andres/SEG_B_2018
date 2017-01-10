@@ -97,7 +97,7 @@ public class TSAConnection extends Thread {
 		char[] passwordKeystore = "123456".toCharArray();
 		char[] passwordPrivateKey = "123456".toCharArray();
 		String pathkeystore = TSA.GetKeyStorePath("tsaKeyStore");
-		String SKServidor = "tsa_dsa";
+		String SKServidor = "tsa_dsa2";
 		PrivateKey privateKey = null;
 
 		try {

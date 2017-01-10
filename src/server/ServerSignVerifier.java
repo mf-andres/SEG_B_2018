@@ -244,7 +244,7 @@ public class ServerSignVerifier {
 
 		KeyStore keyStore;
 		char[] passwordKeystore = "123456".toCharArray();
-		String SKCliente = "tsa_dsa";
+		String SKCliente = "tsa_dsa2";
 		PublicKey publickey = null;
 		try {
 			keyStore = KeyStore.getInstance("JCEKS");
@@ -258,25 +258,30 @@ public class ServerSignVerifier {
 
 	public boolean verifyTSASign(byte[] sigTSA, byte[] clientSign)
 			throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
-		String algorithm = "SHA1withDSA";
 		int blockSize;
 		byte block[] = new byte[1024];
 
 		System.out.println("Starting TSA verify");
 		ByteArrayInputStream validate = new ByteArrayInputStream(sigTSA);
 		TSAPublicKey();
+		String algorithm = publicKeyTSA.getAlgorithm().equalsIgnoreCase("RSA") ? "MD5withRSA" : "SHA1withDSA";
 		// Creacion del objeto para firmar y inicializacion del objeto
 		Signature verifier = Signature.getInstance(algorithm);
-		return true;
-		/*
-		 * verifier.initVerify(publicKeyTSA); while ((longbloque =
-		 * validar.read(bloque)) > 0) { verifier.update(bloque, 0, longbloque);
-		 * } validar.close();
-		 * 
-		 * if (verifier.verify(firmacliente)) { System.out.println(
-		 * "Firma del TSA correcta\n"); return true; } else {
-		 * System.out.println("Firma del TSA no valida\n"); return false; }
-		 */
+		// return true;
+
+		verifier.initVerify(publicKeyTSA);
+		while ((blockSize = validate.read(block)) > 0) {
+			verifier.update(block, 0, blockSize);
+		}
+		validate.close();
+
+		if (verifier.verify(clientSign)) {
+			System.out.println("Firma del TSA correcta\n");
+			return true;
+		} else {
+			System.out.println("Firma del TSA no valida\n");
+			return false;
+		}
 
 	}
 

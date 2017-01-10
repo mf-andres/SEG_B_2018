@@ -157,7 +157,7 @@ public class ServerConnection extends Thread {
 		String extension = docName.split("\\.")[1];
 		String name = String.valueOf(id) + "_" + ownerId + ".sig";
 		if (registerRequest.isPrivate()) {
-			name = ".cif";
+			name += ".cif";
 			byte[] cypheredDoc = serverSigner.CypherDoc(registerRequest.getDocument(), cypherAlgorithm);
 			document = new Document(id, docName, extension, ownerId, timestamp, timeResponse.getTSASign(), true,
 					cypheredDoc, registerRequest.getDocSign(), serverSign, serverSigner.getEncoding());

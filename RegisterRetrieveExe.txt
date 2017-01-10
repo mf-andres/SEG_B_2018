@@ -1,0 +1,5 @@
+REGISTRAR_DOCUMENTO daniel foto3.jpg privado
+REGISTRAR_DOCUMENTO guille foto4.jpg publico
+RECUPERAR_DOCUMENTO daniel 1
+RECUPERAR_DOCUMENTO guille 2
+EXIT

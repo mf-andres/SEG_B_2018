@@ -113,7 +113,7 @@ public class ClientSignVerifier {
 		KeyStore keyStore;
 		char[] passwordKeystore = "123456".toCharArray();
 
-		String SKClient = "tsa_dsa";
+		String SKClient = "tsa_dsa2";
 		PublicKey publickey = null;
 		try {
 			keyStore = KeyStore.getInstance("JCEKS");
@@ -133,19 +133,24 @@ public class ClientSignVerifier {
 
 		System.out.println("Start with TSA verifying ");
 		ByteArrayInputStream validar = new ByteArrayInputStream(sigTSA);
-		// ClavePublicaTSA();
+		TSAPublicKey();
 		// Creacion del objeto para firmar y inicializacion del objeto
-		return true;
-		/*
-		 * Signature verifier = Signature.getInstance(algoritmo);
-		 * verifier.initVerify(publicKeyTSA); while ((longbloque =
-		 * validar.read(bloque)) > 0) { verifier.update(bloque, 0, longbloque);
-		 * } validar.close();
-		 * 
-		 * if (verifier.verify(firmacliente)) { System.out.println(
-		 * "Firma del TSA correcta\n"); return true; } else {
-		 * System.out.println("Firma del TSA no valida\n"); return false; }
-		 */
+		// return true;
+
+		Signature verifier = Signature.getInstance(algorithm);
+		verifier.initVerify(publicKeyTSA);
+		while ((blockSize = validar.read(block)) > 0) {
+			verifier.update(block, 0, blockSize);
+		}
+		validar.close();
+
+		if (verifier.verify(clientSign)) {
+			System.out.println("Firma del TSA correcta\n");
+			return true;
+		} else {
+			System.out.println("Firma del TSA no valida\n");
+			return false;
+		}
 
 	}
 }
