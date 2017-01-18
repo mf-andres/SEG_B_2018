@@ -13,7 +13,7 @@ public class Server {
 	static String algCifrado = "AES-128";
 
 	public static void main(String[] args) {
-
+		algCifrado = args[4];
 		int port = 11233;
 		SetKeystore(args);
 		SSLServerSocketFactory serverSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
