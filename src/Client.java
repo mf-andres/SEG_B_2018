@@ -25,12 +25,15 @@ public class Client {
 	static InetAddress host;
 	static int port;
 	static String suite;
+	Scanner in;
 
 	public static void main(String[] args) {
 
+		say("Getting arguments");
 		if( getArgs(args) < 0)
 			return;
 
+		say("Setting net parameters");
 		try {
 
 			host = InetAddress.getLocalHost();
@@ -43,6 +46,7 @@ public class Client {
 
 		port = 5555;
 
+		say("Getting the suite");
 		try {
 
 			suite = getSuite();
@@ -87,36 +91,42 @@ public class Client {
 
 			case 4:
 
-				System.out.println("Exiting");
-				System.out.println("Goodbye");
+				say("Exiting");
+				say("Goodbye");
 				return;
 
 			default:
 
-				System.out.println("Wrong action");
+				say("Wrong action");
 				break;
 			}
 		}
 	}
 
+	private static void say(String string) {
+		
+		System.out.println(string);
+	}
+	
 	private static String getSuite() throws NoSuchAlgorithmException {
 
 		String selectedSuite;
 
-		SSLContext ctx = SSLContext.getInstance("TLS");
+		SSLContext ctx = SSLContext.getDefault();
 		SSLSocketFactory factory = ctx.getSocketFactory();
 		String[] suites = factory.getSupportedCipherSuites();
 
-		System.out.println("Supported suites:");
+		say("Supported suites:");
 		for(int i = 0; i < suites.length; i++) {
 
 			String suite = suites[i];
-			System.out.print(i + ") " + suite);
+			say(i + ") " + suite);
 		}
 
 		Scanner in = new Scanner(System.in);
 
-		selectedSuite = suites[in.nextInt()];
+		int suiteNumber = in.nextInt();
+		selectedSuite = suites[suiteNumber];
 
 		in.close();
 
@@ -192,7 +202,6 @@ public class Client {
 	private static Socket setConnection() {
 
 		SSLSocket socket;
-
 		try {
 
 			SSLSocketFactory factory = null;
@@ -237,25 +246,27 @@ public class Client {
 
 		try {
 
-			keyStore = KeyStore.getInstance("JKCE");
+			keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(new FileInputStream(keyStoreName), passphrase);
 
-			trustStore = KeyStore.getInstance("JKCE");
+			trustStore = KeyStore.getInstance("JCEKS");
 			trustStore.load(new FileInputStream(trustStoreName), passphrase);
 
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-			// TODO Auto-generated catch block
+		
 			e.printStackTrace();
 		}
 	}
 
 	private static void setPassphrase() {
 
-		System.out.println("Insert KeyStore password:");
+		say("Insert KeyStore password:");
 
 		Scanner in = new Scanner(System.in);
 
 		passphrase = in.nextLine().toCharArray();
+		
+		say("Thank you");
 
 		in.close();
 	}
@@ -264,16 +275,18 @@ public class Client {
 
 		int action = 4;
 
-		System.out.println("Select action:");
-		System.out.println("1) Register document");
-		System.out.println("2) List documents");
-		System.out.println("3) Recover document");
-		System.out.println("4) Exit");
+		say("Select action:");
+		say("1) Register document");
+		say("2) List documents");
+		say("3) Recover document");
+		say("4) Exit");
 
 		Scanner in = new Scanner(System.in);
 
 		action = in.nextInt();
 
+		say("Thank you");
+		
 		in.close();
 
 		return action;
@@ -283,10 +296,11 @@ public class Client {
 
 		if(args.length != 2) {
 
-			System.out.println("Wrong parameters!");
-			System.out.println("Client keyStoreFile trustStoreFile");
+			say("Wrong parameters!");
+			say("Client keyStoreFile trustStoreFile");
 
 			return -1;
+			
 		} else {
 
 			keyStoreName = args[0];

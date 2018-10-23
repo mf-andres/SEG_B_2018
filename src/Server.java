@@ -23,15 +23,20 @@ public class Server {
 
 	public static void main(String[] args) {
 
+		say("Getting arguments");
 		if( getArgs(args) < 0)
 			return;
 
+		say("Setting net parameters");
 		port = 5555;
 		
+		say("Entering infinite loop");
 		while(true) {
 
+			say("Waiting for conection");
 			Socket socket = waitForConection();
 
+			say("Waiting for request");
 			int request  = getRequest();
 
 			switch (request) {
@@ -52,11 +57,35 @@ public class Server {
 
 			default:
 
-				System.out.println("Something went odd");
-				System.out.println("Goodbye");
+				say("Something went odd");
+				say("Goodbye");
 				return;
 			}
 		}
+	}
+
+	private static void say(String string) {
+		
+		System.out.println(string);
+	}
+
+	private static int getRequest() {
+		return 0;
+	}
+
+	private static void recoverDocResponse() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void listDocsResponse() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void registerDocResponse() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	private static Socket waitForConection() {
@@ -93,6 +122,8 @@ public class Server {
 			
 			socket = ss.accept();
 		
+			say("Conection acepted");
+			
         } catch (IOException e) {
 
         	e.printStackTrace();
@@ -107,8 +138,8 @@ public class Server {
 		if(args.length != 4) {
 
 
-			System.out.println("Wrong parameters");
-			System.out.println("Server keyStoreFile KeyStorePassword trustStoreFile cipheringAlgorithm");
+			say("Wrong parameters");
+			say("Server keyStoreFile KeyStorePassword trustStoreFile cipheringAlgorithm");
 			return -1;
 
 		} else {
@@ -120,18 +151,17 @@ public class Server {
 
 				passphrase = keyStorePassword.toCharArray();
 
-				keyStore = KeyStore.getInstance("JKCE");
+				keyStore = KeyStore.getInstance("JCEKS");
 				keyStore.load(new FileInputStream(keyStoreName), passphrase);
 
 				String trustStoreName = args[2];
 
-				trustStore = KeyStore.getInstance("JKCE");
+				trustStore = KeyStore.getInstance("JCEKS");
 				trustStore.load(new FileInputStream(trustStoreName),passphrase);
 
 				cipheringAlgorithm = args[3];
 
 			} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-				// TODO Auto-generated catch block
 
 				e.printStackTrace();
 				return -1;
