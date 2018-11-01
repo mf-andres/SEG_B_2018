@@ -171,4 +171,91 @@ public class Server {
 		}
 	}
 
+	void validateClientSignCert() {
+		
+	}
+
+	void verifyDoc() {
+		
+	}
+	
+	void decipherDoc() {
+		
+	}
+	
+	//get an int that identifies the document
+	void getRID(){
+		
+	}
+	
+	//get a string that specifies the moment the document was stored
+	void getTimestamp() {
+		
+	}
+	
+	//symmetric ciphering with secret key
+	void cipherDocForStorage() {
+		
+	}
+	
+	void decipherDocForStorage() {
+		
+	}
+	
+	void storeDoc() {
+		
+	}
+	
+	//tells whether or not a document is stored
+	void docExists() {
+		
+	}
+	
+	//tells whether the user has permit to access the document and whether the document is private or public
+	void userHasPermit() {
+		
+	}
+	
+	//elaborate register document response
+	void sendRegDocRes(){
+		
+	}
+	
+	//elaborate list documents response
+	void sendListDocRes() {
+		
+	}
+	
+	//elaborate recover document response
+	void sendRecDocRes() {
+		
+	}
+	
+	//recover a list of the publicly stored documents
+	void getPublicDocs() {
+		
+	}
+	
+	//recover a list of the privatly stored documents
+	void getPrivateDocs() {
+		
+	}
+	
+	//recover a given stored doc
+	void getDoc() {
+		
+	}
+	
+	//obtains the client public key
+	void getClientPublicKey() {
+		
+	}
+	
+	//asymetrically with the clients key, to cipher and send the doc
+	void cipherDoc() {
+		
+	}
+	
+	
 }
+
