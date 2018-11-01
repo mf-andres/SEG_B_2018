@@ -1,0 +1,86 @@
+se envía:
+String docName - 
+int confType (1 privado / 2 público)
+documentoCifrado ( de forma asimétrica con la clave pública del servidor, se manda si el tipo de confidencialidad es privado )
+firmaDocumento (con la clave privada del propietario)
+certificadoClavePública (propio para enviarlo
+
+//siempre se cifra!!!!
+
+variables:
+clavePúblicaServidor 
+byte[] doc (el documento) 
+
+-cliente
+obtenerClavePúblicaServidor() -c (para el cifrado en caso de confidencialidad privada)
+obtenerClaveMiPrivada -c (para la firma del documento)
+cifrarDocumento() con la pública del servidor 
+firmarDocumento() con mi privada sobre el documento cifrado -c
+obtenerMiCertificadoClavePública -c (para enviar al servidor)
+enviarDocumento(docName,confType,documentoCifrado,frimaDocumento,miCertificadoClavePública)
+enviarRecDocumento(miCerfiticadoClavePública,idRegistro) 
+
+
+-servidor
+
+variables:
+listaFicheros
+
+validarCertificadoCliente (el que nos ha enviado)
+verificarFirmaDocumeto
+descifrarDocumento() (si el tipo de confidencialidad es privado entonces el documento vendrá cifrado)
+getNúmeroRegistro() 
+getSelloTemporal()
+cifradoAlmacenajeDocumento() //si el tipo de confidencialidad es privado entonces hay que 
+almacenarDocuemnto() //con el id de registro
+elaborarRespuestaEnviarDocumento()
+existeDocumento() -> dice si existe 
+permisoDocumento() -> el usuario tiene permiso o no tiene, y devuelve si es privado o no privado
+descifrarDocumentoAlmacenaje() //para cuando es privado
+elaborarRespuesatRecuperarDocumetno()
+
+recuperarListaPúblicos() // arbol con los privados 
+recuperarListaPrivados() // arbol con los públicos
+recuperarDocumento()
+añadirDocumentoALista()
+
+obtenerClavePúblicaCliente (para cifrar el documento) 
+cifrarDocmentoAsimétrico // para el envío al cliente, con clave pública del cliente
+
+
+clase: documento - con las variables del documento, los métodos para acceder a sus variables y manipularlo
+
+se requiere un arbol identado por el idRegistro para almacenar los documentos registrados en el servidor
+
+clase: CifradorSimétrico - para que el servidor cifre y descifre los documentos
+
+clase: CifradorAsimétrico - para que tanto el cliente como el servidor cifren y descifren los documentos que se comunican
+
+//claves
+
+//son todos JCKES
+ClientKeyStore
+ClientTrustStore
+
+ServerKeyStore
+ServerTrustStore
+
+ClientCertAuth
+ClientCertFirm
+
+ServerCertAuth
+ServerCertFirm
+
+contraseña para todo: 123456
+
+las claves con rsa!
+
+keySizeBit : 1024
+
+domain name asd@asd
+
+country code ES
+
+cert extension ? activar todo menos los only
+
+
