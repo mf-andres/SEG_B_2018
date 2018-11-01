@@ -19,7 +19,7 @@ public class Server {
 	static KeyStore trustStore;
 	static char[] passphrase;
 	static int port;
-	static String cipheringAlgorithm;
+	static String cypheringAlgorithm;
 
 	public static void main(String[] args) {
 
@@ -37,22 +37,23 @@ public class Server {
 			Socket socket = waitForConection();
 
 			say("Waiting for request");
-			int request  = getRequest();
-
-			switch (request) {
+			Request request  = getRequest();
+			int requestType = request.getRequestType();
+			
+			switch (requestType) {
 			case 1:
 
-				registerDocResponse();
+				registerDocResponse(request);
 				break;
 
 			case 2:
 
-				listDocsResponse();
+				listDocsResponse(request);
 				break;
 
 			case 3:
 
-				recoverDocResponse();
+				recoverDocResponse(request);
 				break;
 
 			default:
@@ -69,23 +70,146 @@ public class Server {
 		System.out.println(string);
 	}
 
-	private static int getRequest() {
-		return 0;
+	private static Request getRequest() {
+		
+		return null;
 	}
 
-	private static void recoverDocResponse() {
-		// TODO Auto-generated method stub
+	private static void recoverDocResponse(Request request) {
+		
+		byte[] clientAuthCert = request.getClientAuthCert();
+		int RID = request.getRID();
+		
+		if( ! docExists(RID) ) {
+			
+			String error = "DOCUMENTO NO EXISTENTE";
+			sendErrorRes(error);
+		
+		} else {
+			
+			
+			if( ! userHasPermit(RID, clientAuthCert) ) {
+				
+				String error = "ACCESO NO PERMITIDO";
+				say(error);
+				sendErrorRes(error);
+				
+			} else {
+				
+				Document doc = getDoc(RID);
+				
+				String timeStamp = doc.getTimeStamp();
+				String confType = doc.getConfType();
+				byte[] documentBytes = doc.getBytes();
+				
+				if(confType.equals("privado")) {
+				
+					documentBytes = decypherDoc(documentBytes);
+				}
+				
+				byte[] cypheredDoc = cypherDoc(documentBytes);
+				
+				//TODO aquí tengo la duda de si hay que enviar más cosas como una firma y el certificado del servidor para así verificar en el cliente
+				sendRecDocRes(confType, RID, timeStamp, cypheredDoc);
+			}
+		}
+	}
+
+	private static byte[] cypherDoc(byte[] documentBytes) {
+		return null;
+	}
+
+	private static void listDocsResponse(Request request) {
+	
+		String confType = request.getConfType();
+		byte[] clientAuthCert = request.getClientAuthCert();
+		
+		if( ! validateClientAuthCert(clientAuthCert) ) {
+			
+			String error = "CERTIFICADO INCORRECTO";
+			
+			say(error);
+			sendErrorRes(error);
+		} else {
+			
+			if( ! confType.equals("privado") ) {
+				
+				String  publicDocs = getPublicDocs();
+				sendListDocRes(publicDocs);
+				
+			} else {
+				
+				String privateDocs = getPrivateDocs();
+				sendListDocRes(privateDocs);
+			}
+		}
+	}
+
+	private static boolean validateClientAuthCert(byte[] clientAuthCert) {
+
+		return false;
+	}
+
+	private static void registerDocResponse(Request request) {
+	
+		String docName = request.getDocName();
+		String confType = request.getConfType();
+		byte[] cypheredDoc = request.getCypheredDoc();
+		byte[] docSignature = request.getDocSignature();
+		byte[] clientSignCert = request.getClientSignCert();
+		
+		if( ! validateClientSignCert(clientSignCert) ) {
+			
+			String error = "CERTIFICADO DE FIRMA INCORRECTO";
+			
+			say(error);
+			sendErrorRes(error);
+			
+		} else {
+			
+			if( ! verifyDoc(cypheredDoc, docSignature) ) {
+				
+				say("FIRMA INCORRECTA");
+			
+			} else {
+				
+				byte[] documentBytes = decypherDoc(cypheredDoc);
+				int RID = getRID();
+				String timeStamp = getTimestamp();
+				byte[] myPrivateKey = getMyPrivateKey();
+				
+				byte[] signedDoc = signDoc( RID, timeStamp,documentBytes, docSignature,myPrivateKey);
+				
+				if( confType.equals("privado") ) {
+					
+					documentBytes = cypherDocForStorage(documentBytes);
+				}
+				
+				storeDoc(documentBytes, docSignature, RID, timeStamp, signedDoc);
+				
+				byte[] myCertAuth = getMyCertAuth();
+				
+				sendRegDocRes(RID, timeStamp, signedDoc, myCertAuth);
+			}
+		}
+	}
+
+	private static byte[] getMyCertAuth() {
+		return null;
+	}
+
+	private static void sendErrorRes(String error) {
 		
 	}
 
-	private static void listDocsResponse() {
-		// TODO Auto-generated method stub
-		
+	//firma el documento con la clave privada
+	private static byte[] signDoc(int rID, String timeStamp, byte[] documentBytes, byte[] myPrivateKey, byte[] myPrivateKey2) {
+		return null;
 	}
 
-	private static void registerDocResponse() {
-		// TODO Auto-generated method stub
-		
+	//obtiene la clave privada del servidor para firmar el documento
+	private static byte[] getMyPrivateKey() {
+		return null;
 	}
 
 	private static Socket waitForConection() {
@@ -139,7 +263,7 @@ public class Server {
 
 
 			say("Wrong parameters");
-			say("Server keyStoreFile KeyStorePassword trustStoreFile cipheringAlgorithm");
+			say("Server keyStoreFile KeyStorePassword trustStoreFile cypheringAlgorithm");
 			return -1;
 
 		} else {
@@ -159,7 +283,7 @@ public class Server {
 				trustStore = KeyStore.getInstance("JCEKS");
 				trustStore.load(new FileInputStream(trustStoreName),passphrase);
 
-				cipheringAlgorithm = args[3];
+				cypheringAlgorithm = args[3];
 
 			} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
 
@@ -171,91 +295,96 @@ public class Server {
 		}
 	}
 
-	void validateClientSignCert() {
+	private static boolean validateClientSignCert(byte[] clientSignCert) {
 		
+		return false;
 	}
 
-	void verifyDoc() {
+	private static boolean verifyDoc(byte[] cypheredDoc, byte[] docSignature) {
 		
+		return false;
 	}
 	
-	void decipherDoc() {
+	private static byte[] decypherDoc(byte[] cypheredDoc) {
 		
+		return null;
 	}
 	
 	//get an int that identifies the document
-	void getRID(){
-		
+	private static int getRID(){
+	
+		return 0;
 	}
 	
 	//get a string that specifies the moment the document was stored
-	void getTimestamp() {
+	private static String getTimestamp() {
+		
+		return null;
+	}
+	
+	//symmetric cyphering with secret key
+	private static byte[] cypherDocForStorage(byte[] documentBytes) {
+		
+		return null;
+	}
+	
+	private static void decypherDocForStorage() {
 		
 	}
 	
-	//symmetric ciphering with secret key
-	void cipherDocForStorage() {
-		
-	}
-	
-	void decipherDocForStorage() {
-		
-	}
-	
-	void storeDoc() {
+	private static void storeDoc(byte[] documentBytes, byte[] docSignature, int rID, String timeStamp, byte[] signedDoc) {
 		
 	}
 	
 	//tells whether or not a document is stored
-	void docExists() {
+	private static boolean docExists(int rID) {
 		
+		return false;
 	}
 	
 	//tells whether the user has permit to access the document and whether the document is private or public
-	void userHasPermit() {
+	private static boolean userHasPermit(int rID, byte[] clientAuthCert) {
 		
+		return false;
 	}
 	
 	//elaborate register document response
-	void sendRegDocRes(){
+	private static void sendRegDocRes(int RID, String timeStamp, byte[] signedDoc, byte[] myCertAuth){
 		
 	}
 	
 	//elaborate list documents response
-	void sendListDocRes() {
+	private static void sendListDocRes(String publicDocs) {
 		
 	}
 	
 	//elaborate recover document response
-	void sendRecDocRes() {
+	private static void sendRecDocRes(String confType, int rID, String timeStamp, byte[] cypheredDoc) {
 		
 	}
 	
 	//recover a list of the publicly stored documents
-	void getPublicDocs() {
+	private static String getPublicDocs() {
 		
+		return null;
 	}
 	
 	//recover a list of the privatly stored documents
-	void getPrivateDocs() {
+	private static String getPrivateDocs() {
 		
+		return null;
 	}
 	
 	//recover a given stored doc
-	void getDoc() {
+	private static Document getDoc(int rID) {
+		return null;
 		
 	}
 	
 	//obtains the client public key
-	void getClientPublicKey() {
+	private static void getClientPublicKey() {
 		
 	}
-	
-	//asymetrically with the clients key, to cipher and send the doc
-	void cipherDoc() {
-		
-	}
-	
 	
 }
 

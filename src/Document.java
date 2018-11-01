@@ -11,5 +11,15 @@ public class Document {
 		return null;
 	}
 
+	public String getConfType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String getTimeStamp() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	
 }
