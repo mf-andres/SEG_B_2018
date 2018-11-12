@@ -1,17 +1,21 @@
 import java.io.*;
 import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidParameterSpecException;
+
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
 public class SymmetricCipher {
-	public static void cifrado(String archivoClaro, KeyStore serverKeystore, String passKeyStore, String SecretKeyEntryAlias)
+	public static void cifrado(String archivoClaro, KeyStore serverKeystore, String passKeyStore,
+			String SecretKeyEntryAlias)
 			throws InvalidKeyException, NoSuchAlgorithmException, UnrecoverableEntryException, KeyStoreException,
 			NoSuchPaddingException, IOException, IllegalBlockSizeException, BadPaddingException {
 
-		// FileOutputStream fclave = new FileOutputStream(serverKeystore);
-		// FileInputStream fclave_in = new FileInputStream (ARCHIVO_KEYSTORE_CIFRADO);
 		FileInputStream ftextoclaro = new FileInputStream(archivoClaro);
-		FileOutputStream ftextocifrado = new FileOutputStream(archivoClaro+"_cifrado");
+		FileOutputStream ftextocifrado = new FileOutputStream("c_" + archivoClaro);
+		FileOutputStream parametrosCifrado = new FileOutputStream("parametrosCifrado");
 
 		byte bloqueclaro[] = new byte[2024];
 		byte bloquecifrado[] = new byte[2048];
@@ -46,31 +50,37 @@ public class SymmetricCipher {
 		bloquecifrado = cifrador.doFinal();
 		ftextocifrado.write(bloquecifrado);
 
+		// obtencion de los paramentros del cifrado, es necesario para poder descifrar
+		// en bloque
+		byte[] parametros = cifrador.getParameters().getEncoded();
+		parametrosCifrado.write(parametros);
+
 		// Cerrar ficheros
 		ftextocifrado.close();
 		ftextoclaro.close();
-		
+		parametrosCifrado.close();
 
+		System.out.println("Fin Cifrado");
 	}
 
-	public static void descifrado(String archivoCifrado, KeyStore serverKeystore, String passKeyStore, String SecretKeyEntryAlias)
-			throws InvalidKeyException, NoSuchAlgorithmException, UnrecoverableEntryException, KeyStoreException,
-			NoSuchPaddingException, IOException, IllegalBlockSizeException, BadPaddingException {
-
-		
-		//esta pegado tal cual el cifrado
-		
-		FileInputStream ftextoclaro = new FileInputStream(archivoCifrado);
-		FileOutputStream ftextocifrado = new FileOutputStream(archivoCifrado+"_descifrado");
-
-		byte bloqueclaro[] = new byte[2024];
-		byte bloquecifrado[] = new byte[2048];
+	public static void descifrado(String archivoCifrado, KeyStore serverKeystore, String passKeyStore,
+			String SecretKeyEntryAlias) throws InvalidKeyException, NoSuchAlgorithmException,
+			UnrecoverableEntryException, KeyStoreException, NoSuchPaddingException, IOException,
+			IllegalBlockSizeException, BadPaddingException, InvalidParameterSpecException, NoSuchProviderException,
+			InvalidAlgorithmParameterException, CertificateException {
 		String algoritmo = "AES";
 		String transformacion = "/CBC/PKCS5Padding";
-		int longclave = 128;
 		int longbloque;
+		String provider = "SunJCE";
 
-		// ************** LEER LA CLAVE SECRETA **************************
+		FileInputStream ftextocifrado2 = new FileInputStream(archivoCifrado);
+		FileOutputStream ftextoclaro2 = new FileOutputStream("d_" + archivoCifrado);
+		FileInputStream fparametros_in = new FileInputStream("parametrosCifrado");
+
+		byte bloquecifrado2[] = new byte[1024];
+		byte bloqueclaro2[] = new byte[1048];
+
+		System.out.println("*************** INICIO DESCIFRADO *****************");
 
 		char[] key_password = passKeyStore.toCharArray();
 
@@ -79,31 +89,32 @@ public class SymmetricCipher {
 
 		byte[] kreg_raw = pkEntry.getSecretKey().getEncoded();
 		SecretKeySpec kreg = new SecretKeySpec(kreg_raw, algoritmo);
-		
-		
-		// *** parametros 
 
-		System.out.println("*** INICIO CIFRADO " + algoritmo + "-" + longclave + " ************");
+		Cipher descifrador = Cipher.getInstance(algoritmo + transformacion, provider);
 
-		Cipher cifrador = Cipher.getInstance(algoritmo + transformacion);
+		AlgorithmParameters params = AlgorithmParameters.getInstance(algoritmo, provider);
+		byte[] paramSerializados = new byte[fparametros_in.available()];
 
-		// Se cifra con la modalidad opaca de la clave
+		fparametros_in.read(paramSerializados);
+		params.init(paramSerializados);
 
-		cifrador.init(Cipher.ENCRYPT_MODE, kreg);
+		System.out.println("Parametros del descifrado ... = " + params.toString());
 
-		while ((longbloque = ftextoclaro.read(bloqueclaro)) > 0) {
-			bloquecifrado = cifrador.update(bloqueclaro, 0, longbloque);
-			ftextocifrado.write(bloquecifrado);
+		descifrador.init(Cipher.DECRYPT_MODE, kreg, params);
+
+		while ((longbloque = ftextocifrado2.read(bloquecifrado2)) > 0) {
+
+			bloqueclaro2 = descifrador.update(bloquecifrado2, 0, longbloque);
+			ftextoclaro2.write(bloqueclaro2);
 		}
 
-		bloquecifrado = cifrador.doFinal();
-		ftextocifrado.write(bloquecifrado);
+		bloqueclaro2 = descifrador.doFinal();
+		ftextoclaro2.write(bloqueclaro2);
 
-		// Cerrar ficheros
-		ftextocifrado.close();
-		ftextoclaro.close();
-		
-
+		ftextocifrado2.close();
+		ftextoclaro2.close();
+		fparametros_in.close();
+		System.out.println("*************** FIN DESCIFRADO *****************");
 	}
 
 }
