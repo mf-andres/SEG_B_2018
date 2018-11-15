@@ -1,7 +1,6 @@
 import java.io.*;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidParameterSpecException;
 
 import javax.crypto.*;
@@ -24,15 +23,9 @@ public class SymmetricCipher {
 		int longclave = 128;
 		int longbloque;
 
-		// ************** LEER LA CLAVE SECRETA **************************
-
-		char[] key_password = passKeyStore.toCharArray();
-
-		KeyStore.SecretKeyEntry pkEntry = (KeyStore.SecretKeyEntry) serverKeystore.getEntry(SecretKeyEntryAlias,
-				new KeyStore.PasswordProtection(key_password));
-
-		byte[] kreg_raw = pkEntry.getSecretKey().getEncoded();
-		SecretKeySpec kreg = new SecretKeySpec(kreg_raw, algoritmo);
+		// ************** LEER LA CLAVE SECRETA **************************	
+		
+		SecretKeySpec kreg = Claves.getClaveSecreta(passKeyStore, serverKeystore, SecretKeyEntryAlias, algoritmo);
 
 		System.out.println("*** INICIO CIFRADO " + algoritmo + "-" + longclave + " ************");
 

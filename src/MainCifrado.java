@@ -30,7 +30,8 @@ public class MainCifrado {
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(new FileInputStream(archivoKeyStore), passKeyStore.toCharArray());
 
-			SymmetricCipher.cifrado(archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
+			//SymmetricCipher.cifrado(archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
+			AsymmetricCipher.cifrado(archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
 
 		} catch (KeyStoreException | IOException e) {
 			System.out.println("Se produjo un error al cargar el KeyStore: " + e.getMessage());
