@@ -1,43 +1,84 @@
+import java.io.Serializable;
 
-public class Response {
-
-	byte[] getServerSignCert(){
+public class Response implements Serializable {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 969327944693952639L;
+	
+	byte[] signCert;
+	int rid;
+	String timeStamp;
+	byte[] serverSignature;
+	String confType;
+	byte[] signedDoc;
+	byte[] serverSignCert;
+	byte[] cypheredDoc;
+	byte[] authCert;
+	
+	public Response(int rid, String timeStamp, byte[] signedDoc, byte[] authCert) {
 		
-		return null;
-	}
-
-	public int getRID() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	public String getTimeStamp() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public byte[] getServerSignature() {
-		// TODO Auto-generated method stub
-		return null;
+		this.rid = rid;
+		this.timeStamp = timeStamp;
+		this.signedDoc = signedDoc;
+		this.authCert = authCert;
 	}
 	
+	public Response(String confType, int rid, String timeStamp, byte[] cypheredDoc) {
+		
+		this.confType = confType;
+		this.rid = rid;
+		this.timeStamp = timeStamp;
+		this.cypheredDoc = cypheredDoc;
+	}
+	
+	public byte[] getSignCert() {
+		return signCert;
+	}
+	public void setSignCert(byte[] signCert) {
+		this.signCert = signCert;
+	}
+	public int getRID() {
+		return rid;
+	}
+	public void setRID(int rID) {
+		rid = rID;
+	}
+	public String getTimeStamp() {
+		return timeStamp;
+	}
+	public void setTimeStamp(String timeStamp) {
+		this.timeStamp = timeStamp;
+	}
+	public byte[] getServerSignature() {
+		return serverSignature;
+	}
+	public void setServerSignature(byte[] serverSignature) {
+		this.serverSignature = serverSignature;
+	}
 	public String getConfType() {
-		// TODO Auto-generated method stub
-		return null;
+		return confType;
 	}
-
+	public void setConfType(String confType) {
+		this.confType = confType;
+	}
 	public byte[] getSignedDoc() {
-		// TODO Auto-generated method stub
-		return null;
+		return signedDoc;
 	}
-
-	public byte[] getServerSignedCert() {
-		// TODO Auto-generated method stub
-		return null;
+	public void setSignedDoc(byte[] signedDoc) {
+		this.signedDoc = signedDoc;
 	}
-
+	public byte[] getServerSignCert() {
+		return serverSignCert;
+	}
+	public void setServerSignCert(byte[] serverSignCert) {
+		this.serverSignCert = serverSignCert;
+	}
 	public byte[] getCypheredDoc() {
-		// TODO Auto-generated method stub
-		return null;
+		return cypheredDoc;
+	}
+	public void setCypheredDoc(byte[] cypheredDoc) {
+		this.cypheredDoc = cypheredDoc;
 	}
 }

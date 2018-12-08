@@ -1,8 +1,18 @@
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -26,22 +36,20 @@ public class Client {
 	static InetAddress host;
 	static int port;
 	static String suite;
-	Scanner in;
+	static Scanner in = new Scanner(System.in);;
 	static TreeMap<Integer, byte[]> hashedDocsTree; //arbol que almacena valores hash de los documentos registrados junto a su número de registro
 
 	public static void main(String[] args) {
 
 		say("Getting arguments");
-		if( getArgs(args) < 0)
+		if( getArgs(args) < 0) {		
 			return;
+		}
 
 		say("Setting net parameters");
 		try {
-
 			host = InetAddress.getLocalHost();
-
 		} catch (UnknownHostException e1) {
-
 			e1.printStackTrace();
 			return;
 		}
@@ -50,11 +58,8 @@ public class Client {
 
 		say("Getting the suite");
 		try {
-
 			suite = getSuite();
-
 		} catch (NoSuchAlgorithmException e) {
-
 			e.printStackTrace();
 			return;
 		}
@@ -66,28 +71,31 @@ public class Client {
 			switch (action) {
 			case 1:
 
-				Object o = registerDoc();
-				if(o == null) {
-
-					return;
+				say("Register document");
+				try {
+					registerDoc();
+				} catch (IOException | ClassNotFoundException e) {
+					e.printStackTrace();
 				}
 				break;
 
 			case 2:
 
-				Object o1 = listDocs();
-				if(o1 == null) {
-
-					return;
+				say("List documents");
+				try {
+					listDocs();
+				} catch (IOException | ClassNotFoundException e) {
+					e.printStackTrace();
 				}
 				break;
-				
+
 			case 3:
 
-				Object o2 = recoverDoc();
-				if(o2 == null) {
-
-					return;
+				say("Recover document");
+				try {
+					recoverDoc();
+				} catch (IOException | ClassNotFoundException e) {
+					e.printStackTrace();
 				}
 				break;
 
@@ -105,16 +113,155 @@ public class Client {
 		}
 	}
 
-	private static void say(String string) {
+	//stores the recovered document in the user's file system
+	private static void storeDoc(byte[] hashedDoc, byte[] documentBytes) {
 		
-		System.out.println(string);
+		Path path = Paths.get("doc_" + hashedDoc.toString());
+		try {
+			Files.write(path, documentBytes);
+		} catch (IOException e) {
+			e.printStackTrace();
+			say("Failed to store the document");
+		}
 	}
-	
+
+	//asymmetrically, with the server public key, to send the doc
+	private static byte[] cypherDoc(byte[] documentBytes, byte[] serverPublicKey) {
+		//TODO
+		return documentBytes;
+	}
+
+	//asymmetrically, with my private key, to receive the doc
+	private static byte[] decypherDoc(byte[] cypheredDoc, byte[] myPrivateKey) {
+		//TODO
+		return cypheredDoc;
+	}
+
+	//get the action the user wants to use
+	private static int getAction() {
+
+		int action = 4;
+
+		say("Select action:");
+		say("1) Register document");
+		say("2) List documents");
+		say("3) Recover document");
+		say("4) Exit");
+		say("...");
+
+		action = Integer.parseInt(in.nextLine());
+
+		return action;
+	}
+
+	//get arguments from invoke statement
+	private static int getArgs(String[] args) {
+
+		if(args.length != 2) {
+
+			say("Wrong parameters!");
+			say("Client keyStoreFile trustStoreFile");
+
+			return -1;
+
+		} else {
+
+			keyStoreName = args[0];
+			trustStoreName = args[1];
+
+			return 1;
+		}
+	}
+
+	//ask the client about the type of confidentiality it wants
+	private static String getConfType() {
+		//TODO let the user choose the conf type
+
+		String confType;
+
+		//		say("�Do you want this file to be confidential?...");
+		//		String res = in.nextLine();
+		//		
+		//		if(res.trim().equals("y") || res.trim().equals("yes")) {
+		//			confType = "public";
+		//		} else {
+		//			confType = "private";
+		//		}
+
+		confType = "public";
+
+		return confType;
+	}
+
+	//ask the client about what document it wants to send and obtain it
+	private static Document getDocument() {
+		//TODO dejar que el usuario pueda escoger el fichero
+
+		Document doc;
+
+		//		say("Type the name of the file that you want to send...");
+		//		String fileName = in.nextLine();
+		String fileName = "turtle.jpg";
+
+		File file = new File(fileName);
+		byte[] fileContent;
+
+		try {
+			fileContent = Files.readAllBytes(file.toPath());
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		doc = new Document();
+		doc.setName(fileName);
+		doc.setContent(fileContent);
+
+		return doc;
+	}
+
+	private static byte[] getMyAuthCert() {
+		//TODO
+		return "MYAUTHCERT".getBytes();
+	}
+
+	//to sign the doc
+	private static byte[] getMyPrivateKey() {
+		//TODO
+		return "PRIVATEKEY".getBytes();	
+	}
+
+	//to obtain the public key certificate for signing in order to send it to the server
+	private static byte[] getMySignCert() {
+		//TODO
+		return "MYSIGNCERT".getBytes();
+	}
+
+	//ask the user about the register identifier of the document it wants to recover 
+	private static int getRID() {
+		//TODO
+		
+		int rid;
+		
+//		say("Type the RID of the document you want to recover...");
+//		rid = Integer.parseInt(in.nextLine().trim());
+		
+		rid = 1;
+		
+		return rid;
+	}
+
+	private static byte[] getServerPublicKey(){
+		//TODO 
+		return "SERVERPUBLICKEY".getBytes();
+	}
+
 	private static String getSuite() throws NoSuchAlgorithmException {
+		//TODO dejar que el usuario la escoja
 
 		String selectedSuite;
 
-		SSLContext ctx = SSLContext.getDefault();
+		/*SSLContext ctx = SSLContext.getDefault();
 		SSLSocketFactory factory = ctx.getSocketFactory();
 		String[] suites = factory.getSupportedCipherSuites();
 
@@ -125,47 +272,72 @@ public class Client {
 			say(i + ") " + suite);
 		}
 
-		Scanner in = new Scanner(System.in);
-
-		int suiteNumber = in.nextInt();
+		say("Please select a suite...");
+		int suiteNumber = Integer.parseInt(in.nextLine());
 		selectedSuite = suites[suiteNumber];
+		 */
 
-		in.close();
+		selectedSuite = "TLS_DHE_DSS_WITH_AES_256_CBC_SHA";
 
 		return selectedSuite;
 	}
 
-	private static Object recoverDoc() {
+	//hash the document and store it in the hashedDocsTree
+	private static byte[] hashDoc(byte[] documentBytes) {
+		//TODO
+		return documentBytes;
+	}
+
+	private static Object listDocs() throws IOException, ClassNotFoundException {
 
 		setPassphrase();
-		setKeyStoreAndTruStore();
+		setKeyStoreAndTrustStore();
 		Socket socket = setConnection();
 
-		if(socket == null)
-			return null;
-		
-		try {
-			
-			socket.close();
-			
-		} catch (IOException e) {
-			
-			e.printStackTrace();
+		if(socket == null) {
+
+			say("Conection failed");
 			return null;
 		}
-		
+
+		String confType = getConfType();
+
 		byte[] myAuthCert = getMyAuthCert();
-		
+
+		// TODO aquí la forma de imprimir la respuesta quizá no sea la más indicada
+		String response = sendListDocReq(confType, myAuthCert, socket);
+
+		say(response);
+
+		socket.close();
+
+		return null;
+	}
+
+	private static Object recoverDoc() throws IOException, ClassNotFoundException {
+
+		setPassphrase();
+		setKeyStoreAndTrustStore();
+		Socket socket = setConnection();
+
+		if(socket == null) {
+
+			say("Conection failed");
+			return null;
+		}
+
+		byte[] myAuthCert = getMyAuthCert();
+
 		int RID = getRID();
-	
-		Object response = sendRecDocReq(myAuthCert, RID);
-		
+
+		Object response = sendRecDocReq(myAuthCert, RID, socket);
+
 		if(response instanceof String) {
-			
+
 			say((String)response);
-			
+
 		} else {
-		
+
 			// TODO duda: si siempre codificamos la comunicación no tiene por qué devolverse confType
 			//String confType = ((Response) response).getConfType();
 			// TODO duda : la especificación indica que se devolverá el RID pero ya debería ser el que le pasamos nosotros
@@ -174,201 +346,217 @@ public class Client {
 			String timeStamp = ((Response) response).getTimeStamp();
 			byte[] cypheredDoc = ((Response) response).getCypheredDoc();
 			byte[] serverSignature = ((Response) response).getServerSignature();
-			byte[] serverSignCert = ((Response) response).getServerSignedCert();
-			
+			byte[] serverSignCert = ((Response) response).getServerSignCert();
+
 			if( ! validateServerSignCert(serverSignCert) ){
-				
+
 				say("CERTIFICADO DE REGISTRADOR INCORRECTO");
-				
+
 			} else {
-				
+
 				byte[] myPrivateKey = getMyPrivateKey();
 				byte[] documentBytes = decypherDoc(cypheredDoc, myPrivateKey);
 
 				// TODO duda: en principio siempre ciframos en comunicación, pero en este punto el documento no es claro
 				// propongo optar por cifrar siempre
-				
+
 				// TODO duda: aquí hay que ver si se puede usar la misma función para ambas funciones
 				if( ! verifyServerSign(serverSignature, documentBytes, null)) {
-					
+
 					say("FALLO DE FIRMA DEL REGISTRADOR");
-					
+
 				} else {
-					
+
 					byte[] hashedDoc = hashDoc(documentBytes);
 					byte[] OriginalHashedDoc = hashedDocsTree.get(RID);
-					
+
 					if( ! hashedDoc.equals(OriginalHashedDoc) ) {
-						
+
 						say("DOCUMENTO ALTERADO POR EL REGISTRADOR");
-					
+
 					} else {
-						
+
 						say("DOCUMENTO RECUPERADO CORRECTAMENTE " + RID + " " + timeStamp );
-						archiveDoc(documentBytes);
+						storeDoc(hashedDoc, documentBytes);
 					}
 				}
 			}
 		}
 		
-		return null;
-	}
-
-	//stores the recovered document in the user's file system
-	private static void archiveDoc(byte[] documentBytes) {
+		socket.close();
 		
-	}
-
-	private static byte[] decypherDoc(byte[] cypheredDoc, byte[] myPrivateKey) {
 		return null;
 	}
 
-	//ask the user about the register identifier of the document it wants to recover 
-	private static int getRID() {
-		return 0;
-	}
+	private static Object registerDoc() throws IOException, ClassNotFoundException {
 
-	private static Object listDocs() {
-
-		setPassphrase();
-		setKeyStoreAndTruStore();
+		setPassphrase();	
+		setKeyStoreAndTrustStore();	
 		Socket socket = setConnection();
 
-		if(socket == null)
-			return null;
-		
-		try {
-			
-			socket.close();
-			
-		} catch (IOException e) {
-			
-			e.printStackTrace();
+		if(socket == null) {
+
+			say("Conection failed");
 			return null;
 		}
-		
-		String confType = getConfTyep();
-		
-		byte[] myAuthCert = getMyAuthCert();
 
-		// TODO aquí la forma de imprimir la respuesta quizá no sea la más indicada
-		String response = sendListDocReq(confType, myAuthCert);
-		
-		say(response);
-		
-		return null;
-	}
-
-	private static byte[] getMyAuthCert() {
-		return null;
-	}
-
-	private static Object registerDoc() {
-
-		setPassphrase();
-		setKeyStoreAndTruStore();
-		Socket socket = setConnection();
-
-		if(socket == null)
-			return null;
-
-		try {
-			
-			socket.close();
-			
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-			return null;
-		}
-		
 		Document document = getDocument();
 
+		if(document == null) {
+
+			say("Unable to retrive document");
+		}
+
 		String docName = document.getName();
-		
-		byte[] documentBytes = document.getBytes();
-		
-		String confType = getConfTyep();
-		
+
+		byte[] docContent = document.getContent();
+
+		String confType = getConfType();
+
 		byte[] serverPublicKey = getServerPublicKey();
-		
+
 		byte[] myPrivateKey = getMyPrivateKey();
-		
-		byte[] cypheredDoc = cypherDoc(documentBytes, serverPublicKey);
-		
+
+		byte[] cypheredDoc = cypherDoc(docContent, serverPublicKey);
+
 		byte[] signedDoc = signDoc(cypheredDoc, myPrivateKey);
 
 		byte[] mySignCert = getMySignCert();
-		
-		Object response = sendRegDocReq(docName, confType, cypheredDoc, signedDoc, mySignCert);
-		
+
+		Object response = sendRegDocReq(docName, confType, cypheredDoc, signedDoc, mySignCert, socket);
+
 		if(response instanceof String) {
-			
+
 			say((String)response);
 
 		} else {
-			
+
 			int RID = ((Response) response).getRID();
 			String timeStamp = ((Response)response).getTimeStamp();
 			byte[] serverSignature = ((Response)response).getServerSignature();
 			byte[] serverSignCert = ((Response)response).getServerSignCert();
-			
+
 			if( ! validateServerSignCert(serverSignCert) ) {
-				
-				
+
 				say("CERTIFICADO DE REGISTRADOR INCORRECTO");
-				
+
 			} else {
-				
-				if( ! verifyServerSign(serverSignature, documentBytes, signedDoc) ) {
-					
+
+				if( ! verifyServerSign(serverSignature, docContent, signedDoc) ) {
+
 					say("FIRMA INCORRECTA DEL REGISTRADOR");
-					
+
 				} else {
-					
+
 					say("Documento correctamente registrado con el numero " + RID + " " + timeStamp);
-					
-					byte[] hashedDoc = hashDoc(documentBytes);
-					
+
+					byte[] hashedDoc = hashDoc(docContent);
+
 					hashedDocsTree.put(RID, hashedDoc);
-					
-//					//este método se supone que borra del equipo ambas cosas, pero si no las guardamos en el eqipo qué?
-//					deleteDocAndSignature();
+
+					deleteDocAndSignature(docName);
 				}
 			}
 		}
-		
-		
-		
+
+		socket.close();
+
 		return null;
 	}
 
-	//hash the document and store it in the hashedDocsTree
-	private static byte[] hashDoc(byte[] documentBytes) {
+	private static void deleteDocAndSignature(String docName) {
 		
-		return null;
+		File file = new File(docName);
+		file.delete();
 	}
 
-	//TODO esta función es probable que esté mal definida. Hay que tener en cuenta la respuesta del servidor a recgiste doc
-	//hay que estudiarlo
-	private static boolean verifyServerSign(byte[] serverSignature, byte[] documentBytes, byte[] signedDoc) {
-		return false;
+	private static void say(String string) {
+
+		System.out.println(string);
+	}
+
+	private static String sendListDocReq(String confType, byte[] myAuthCert, Socket socket) throws IOException, ClassNotFoundException{
 		
-	}
+		Request request = new Request(confType, myAuthCert);
 
-	private static boolean validateServerSignCert(byte[] serverSignCert) {
-		return false;
+		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+
+		out.write((int) 2);
+
+		out.writeObject(request);
+
+		out.close();
 		
+		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+		
+		//TODO hay que ver si eliminar esta parte
+		int successcode = in.readInt();
+		
+		String response = (String) in.readObject();
+
+		return response;	
 	}
 
-	//ask the client about the type of confidentiality it wants
-	private static String getConfTyep() {
-		return null;
+	private static Object sendRecDocReq(byte[] myAuthCert, int RID, Socket socket) throws IOException, ClassNotFoundException{
+		//TODO recibir respuesta
+
+		Request request = new Request(myAuthCert, RID);
+
+		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+
+		out.write((int) 3);
+
+		out.writeObject(request);
+
+		out.close();
+
+		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+		
+		int successcode = in.readInt();
+		
+		Object response = in.readObject();
+		
+		if(successcode == -1) {
+
+			response = (String) response;
+		} 
+		else {
+			
+			response = (Response) response;
+		}
+
+		return response;
 	}
 
-	//ask the client about what document it wants to send and obtain it
-	private static Document getDocument() {
-		return null;
+	private static Object sendRegDocReq(String docName, String confType, byte[] cypheredDoc, byte[] signedDoc, byte[] mySignCert, Socket socket) throws IOException, ClassNotFoundException{
+		//TODO recibir respuesta
+
+		Request request = new Request(docName, confType, cypheredDoc, signedDoc);
+
+		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+
+		out.write((int) 1);
+
+		out.writeObject(request);
+
+		out.close();
+
+		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+		
+		int successcode = in.readInt();
+		
+		Object response = in.readObject();
+		
+		if(successcode == -1) {
+
+			response = (String) response;
+		} 
+		else {
+			
+			response = (Response) response;
+		}
+
+		return response;
 	}
 
 	private static Socket setConnection() {
@@ -414,7 +602,7 @@ public class Client {
 		return socket;
 	}
 
-	private static void setKeyStoreAndTruStore() {
+	private static void setKeyStoreAndTrustStore() {
 
 		try {
 
@@ -425,107 +613,36 @@ public class Client {
 			trustStore.load(new FileInputStream(trustStoreName), passphrase);
 
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-		
+
 			e.printStackTrace();
 		}
 	}
 
 	private static void setPassphrase() {
+		//TODO dejar que el usuario ponga su contrase�a
 
-		say("Insert KeyStore password:");
+		say("Insert KeyStore password...");
 
-		Scanner in = new Scanner(System.in);
-
-		passphrase = in.nextLine().toCharArray();
-		
-		say("Thank you");
-
-		in.close();
+		//passphrase = in.nextLine().toCharArray();
+		passphrase = "123456".toCharArray();
 	}
 
-	private static int getAction() {
-
-		int action = 4;
-
-		say("Select action:");
-		say("1) Register document");
-		say("2) List documents");
-		say("3) Recover document");
-		say("4) Exit");
-
-		Scanner in = new Scanner(System.in);
-
-		action = in.nextInt();
-
-		say("Thank you");
-		
-		in.close();
-
-		return action;
-	}
-
-	private static int getArgs(String[] args) {
-
-		if(args.length != 2) {
-
-			say("Wrong parameters!");
-			say("Client keyStoreFile trustStoreFile");
-
-			return -1;
-			
-		} else {
-
-			keyStoreName = args[0];
-			trustStoreName = args[1];
-
-			return 1;
-		}
-	}
-
-	//to later cipher if typeConf is private
-	private static byte[] getServerPublicKey(){
-		return null;
-		
-	}
-	
-	//to sign the doc
-	private static byte[] getMyPrivateKey() {
-		return null;
-		
-	}
-	
-	//asymmetrically, with the server public key, to send the doc
-	private static byte[] cypherDoc(byte[] documentBytes, byte[] serverPublicKey) {
-	
-		return null;
-	}
-	
 	//with my private key, over the ciphered doc
 	private static byte[] signDoc(byte[] cypheredDoc, byte[] myPrivateKey) {
-		
-		return null;
-	}
-	
-	//to obtain the public key certificate for signing in order to send it to the server
-	private static byte[] getMySignCert() {
-		
-		return null;
-	}
-	
-	private static String sendRegDocReq(String docName, String confType, byte[] cypheredDoc, byte[] signedDoc, byte[] mySignCert){
-		
-		return null;
-	}
-	
-	private static String sendListDocReq(String confType, byte[] myAuthCert){
-		
-		return null;
-	}
-	
-	private static String sendRecDocReq(byte[] myAuthCert, int rID){
-		
-		return null;
+		//TODO
+		return cypheredDoc;
 	}
 
-	
+	private static boolean validateServerSignCert(byte[] serverSignCert) {
+		//TODO
+		return true;
+	}
+
+	private static boolean verifyServerSign(byte[] serverSignature, byte[] documentBytes, byte[] signedDoc) {
+		//TODO esta función es probable que esté mal definida. Hay que tener en cuenta la respuesta del servidor a recgiste doc
+		//hay que estudiarlo
+		return true;
+	}
+
+
 }
