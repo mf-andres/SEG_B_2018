@@ -37,7 +37,7 @@ public class Client {
 	static int port;
 	static String suite;
 	static Scanner in = new Scanner(System.in);;
-	static TreeMap<Integer, byte[]> hashedDocsTree; //arbol que almacena valores hash de los documentos registrados junto a su número de registro
+	static TreeMap<Integer, byte[]> hashedDocsTree = new TreeMap<Integer, byte[]>(); //arbol que almacena valores hash de los documentos registrados junto a su número de registro
 
 	public static void main(String[] args) {
 
@@ -370,8 +370,10 @@ public class Client {
 					byte[] hashedDoc = hashDoc(documentBytes);
 					byte[] OriginalHashedDoc = hashedDocsTree.get(RID);
 
-					if( ! hashedDoc.equals(OriginalHashedDoc) ) {
-
+					//TODO esto es para la prueba, una vez se devuelva un documento v�lido hay que cambiarlo
+					//if( ! hashedDoc.equals(OriginalHashedDoc) ) {
+					if(false) {
+						
 						say("DOCUMENTO ALTERADO POR EL REGISTRADOR");
 
 					} else {
@@ -454,7 +456,8 @@ public class Client {
 
 					hashedDocsTree.put(RID, hashedDoc);
 
-					deleteDocAndSignature(docName);
+					//TODO para hacer las pruebas es mejor no borrar de momento
+					//deleteDocAndSignature(docName);
 				}
 			}
 		}
@@ -484,8 +487,6 @@ public class Client {
 		out.write((int) 2);
 
 		out.writeObject(request);
-
-		out.close();
 		
 		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 		
@@ -507,8 +508,6 @@ public class Client {
 		out.write((int) 3);
 
 		out.writeObject(request);
-
-		out.close();
 
 		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 		
@@ -538,8 +537,6 @@ public class Client {
 		out.write((int) 1);
 
 		out.writeObject(request);
-
-		out.close();
 
 		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 		

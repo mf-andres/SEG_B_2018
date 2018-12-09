@@ -36,18 +36,23 @@ public class Server {
 		
 		say("Setting net parameters");
 		port = 5555;
+	
+		ServerSocket ss = prepareConection();
 		
 		while(true) {
 	
 			say("Waiting for conection");
-			Socket socket = waitForConection();
-			
-			if(socket == null) {
-				
+			Socket socket;
+			try {
+				socket = ss.accept();
+			} catch (IOException e2) {
+				e2.printStackTrace();
 				say("Connection failed");
 				return;
 			}
-	
+			
+			say("Conection acepted");
+			
 			say("Waiting for request");
 			Request request;
 			try {
@@ -178,8 +183,13 @@ public class Server {
 
 	//recover a given stored doc
 	private static Document getDoc(int rID) {
-		//TODO
-		return null;
+		//TODO eliminar la prueba y devolver algo coherente
+		Document doc = new Document();
+		doc.setConfType("private");
+		doc.setContent("SOMECONTENT".getBytes());
+		doc.setName("UNNOMBREINVENTADO");
+		doc.setTimeStamp("11/11/2211");
+		return doc;
 	}
 
 	private static byte[] getMyCertAuth() {
@@ -243,7 +253,7 @@ public class Server {
 			break;
 		}
 		
-		return null;
+		return request;
 	}
 
 	//get an int that identifies the document
@@ -440,9 +450,10 @@ public class Server {
 		return true;
 	}
 	
-	private static Socket waitForConection() {
+	private static ServerSocket prepareConection() {
 	
 		Socket socket;
+		ServerSocket ss;
 	
 	    try {
 	    	
@@ -469,13 +480,11 @@ public class Server {
 				return null;
 			}    
 	
-			ServerSocket ss = ssf.createServerSocket(port);
+			ss = ssf.createServerSocket(port);
 			
 			((SSLServerSocket)ss).setNeedClientAuth(true);
 			
-			socket = ss.accept();
-		
-			say("Conection acepted");
+
 			
 	    } catch (IOException e) {
 	
@@ -483,7 +492,7 @@ public class Server {
 	    	return null;
 		}
 	
-		return socket;
+		return ss;
 	}
 	
 }
