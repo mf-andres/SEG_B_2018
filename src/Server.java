@@ -1,16 +1,23 @@
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -87,7 +94,7 @@ public class Server {
 	
 				try {
 					recoverDocResponse(request, socket);
-				} catch (IOException e1) {
+				} catch (IOException | ClassNotFoundException e1) {
 					e1.printStackTrace();
 				}
 				break;
@@ -108,7 +115,7 @@ public class Server {
 	}
 
 	//asymmetrically to send to the client
-	private static byte[] cypherDoc(byte[] documentBytes) {
+	private static byte[] cypherDoc(byte[] documentBytes, byte[] clientPublicKey) {
 		//TODO
 		return documentBytes;
 	}
@@ -133,8 +140,29 @@ public class Server {
 
 	//tells whether or not a document is stored
 	private static boolean docExists(int rID) {
-		//TODO
-		return true;
+		
+		boolean found = false;
+		
+		String docsFolder = "./docs";
+		File folder = new File(docsFolder);
+		File[] listOfFiles = folder.listFiles();
+
+		for (File file : listOfFiles) {
+		    
+			if (file.isFile()) {
+		    	
+				String fileName = file.getName();
+		        System.out.println(fileName);
+		        
+		        if(fileName.contains("_" + rID + "_")) {
+		        
+		        	found = true;
+		        	break;
+		        }
+		    }
+		}
+
+		return found;
 	}
 
 	private static int getArgs(String[] args) {
@@ -182,16 +210,47 @@ public class Server {
 	}
 
 	//recover a given stored doc
-	private static Document getDoc(int rID) {
-		//TODO eliminar la prueba y devolver algo coherente
+	private static Document getDoc(int rID) throws IOException, ClassNotFoundException {
+
 		Document doc = new Document();
-		doc.setConfType("private");
-		doc.setContent("SOMECONTENT".getBytes());
-		doc.setName("UNNOMBREINVENTADO");
-		doc.setTimeStamp("11/11/2211");
+
+		FileInputStream fis = new FileInputStream("./docs/doc_" + rID + ".sig");
+
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		doc = (Document) ois.readObject();
+
+		ois.close();
+
 		return doc;
 	}
 
+	private static Document getDoc(String fileName) {
+		
+		Document doc = new Document();
+		
+		try {
+			
+			FileInputStream fis = new FileInputStream("./docs/" + fileName);
+			
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			doc = (Document) ois.readObject();
+			
+			ois.close();
+			
+		} catch (ClassNotFoundException e) {
+			
+			e.printStackTrace();
+			return null;
+			
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+			return null;
+		}
+		
+		return doc;
+	}
+	
 	private static byte[] getMyCertAuth() {
 		//TODO
 		return "MYCERTAUTH".getBytes();
@@ -205,18 +264,74 @@ public class Server {
 
 	//recover a list of the privatly stored documents
 	private static String getPrivateDocs() {
-		//TODO
-		return "C,D";
+		
+		ArrayList<String> privateDocs = new ArrayList<String>();
+		
+		String docsFolder = "./docs";
+		File folder = new File(docsFolder);
+		File[] listOfFiles = folder.listFiles();
+
+		for (File file : listOfFiles) {
+		    
+			if (file.isFile()) {
+		    	
+				String fileName = file.getName();
+		        System.out.println(fileName);
+		        
+		        Document doc = getDoc(fileName);
+		        
+		        if(doc.getConfType().equals("private")){
+		        	
+		        	privateDocs.add(fileName);
+		        }
+			}
+		}
+			
+		String serializedList = "";
+		for(String privateDoc : privateDocs) {
+			
+			serializedList += privateDoc;
+		}
+		
+		return serializedList;
 	}
 
 	//recover a list of the publicly stored documents
 	private static String getPublicDocs() {
-		//TODO
-		return "A,B";
+
+		ArrayList<String> publicDocs = new ArrayList<String>();
+		
+		String docsFolder = "./docs";
+		File folder = new File(docsFolder);
+		File[] listOfFiles = folder.listFiles();
+
+		for (File file : listOfFiles) {
+		    
+			if (file.isFile()) {
+		    	
+				String fileName = file.getName();
+		        System.out.println(fileName);
+		        
+		        Document doc = getDoc(fileName);
+		        
+		        if(doc.getConfType().equals("public")){
+		        	
+		        	publicDocs.add(fileName);
+		        }
+			}
+		}
+			
+		String serializedList = "";
+		for(String publicDoc : publicDocs) {
+			
+			serializedList += publicDoc;
+		}
+		
+		return serializedList;
 	}
 
 	private static Request getRequest(Socket socket) throws IOException, ClassNotFoundException {
-		//TODO parse requests and see how to put the flow, request type? objetcinputstream
+		
 		Request request = null;
 		
 		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
@@ -281,6 +396,7 @@ public class Server {
 			
 			say(error);
 			sendErrorRes(error, out);
+			
 		} else {
 			
 			if( ! confType.equals("privado") ) {
@@ -296,7 +412,8 @@ public class Server {
 		}
 	}
 	
-	private static void recoverDocResponse(Request request, Socket socket) throws IOException {
+	//TODO tengo la sensación de que si nos da que un documento no existe puede saltar una excepción y que no sea devuelto ningún mensaje al usuario
+	private static void recoverDocResponse(Request request, Socket socket) throws IOException, ClassNotFoundException {
 		
 		byte[] clientAuthCert = request.getAuthCert();
 		int RID = request.getRID();
@@ -330,7 +447,9 @@ public class Server {
 					documentBytes = decypherDocForStorage(documentBytes);
 				}
 				
-				byte[] cypheredDoc = cypherDoc(documentBytes);
+				byte[] clientPublicKey = getClientPublicKey();
+				
+				byte[] cypheredDoc = cypherDoc(documentBytes, clientPublicKey);
 				
 				//TODO aquÃ­ tengo la duda de si hay que enviar mÃ¡s cosas como una firma y el certificado del servidor para asÃ­ verificar en el cliente
 				sendRecDocRes(confType, RID, timeStamp, cypheredDoc, out);
@@ -340,7 +459,7 @@ public class Server {
 	
 	private static void registerDocResponse(Request request, Socket socket) throws IOException {
 	
-		String docName = request.getDocName(); //hay que pensar si devolver esto para guardar después en el cliente
+		//String docName = request.getDocName(); //hay que pensar si devolver esto para guardar después en el cliente
 		String confType = request.getConfType();
 		byte[] cypheredDoc = request.getCypheredDoc();
 		byte[] docSignature = request.getSignedDoc();
@@ -359,8 +478,9 @@ public class Server {
 			
 			if( ! verifyDoc(cypheredDoc, docSignature) ) {
 				
-				say("FIRMA INCORRECTA");
-				//TODO aquí debería enviarse un error? 
+				String error = "FIRMA INCORRECTA";
+				say(error);
+				sendErrorRes(error, out);
 			
 			} else {
 				
@@ -376,7 +496,18 @@ public class Server {
 					documentBytes = cypherDocForStorage(documentBytes);
 				}
 				
-				storeDoc(documentBytes, docSignature, RID, timeStamp, signedDoc);
+				//para probar el registro
+				Path path = Paths.get("doc_on_server");
+				try {
+					Files.write(path, documentBytes);
+				} catch (IOException e) {
+					e.printStackTrace();
+					say("Failed to store the document");
+				}
+				
+				String clientID = getClientID(clientSignCert);
+				
+				storeDoc(documentBytes, docSignature, RID, timeStamp, signedDoc, confType, clientID);
 				
 				byte[] myCertAuth = getMyCertAuth();
 				
@@ -385,6 +516,12 @@ public class Server {
 		}
 	}
 	
+	//obtiene el identificador del usuario
+	private static String getClientID(byte[] clientSignCert) {
+		// TODO hacer que devuelva algo coherente
+		return "usuario1";
+	}
+
 	private static void say(String string) {
 		
 		System.out.println(string);
@@ -419,20 +556,41 @@ public class Server {
 		out.writeObject(response);
 	}
 	
-	//firma el documento con la clave privada
+	//firma el documento con la clave privada (esto es para almacenarlo)
 	private static byte[] signDoc(int rID, String timeStamp, byte[] documentBytes, byte[] docSignature, byte[] myPrivateKey) {
 		//TODO
 		return documentBytes;
 	}
 	
-	private static void storeDoc(byte[] documentBytes, byte[] docSignature, int rID, String timeStamp, byte[] signedDoc) {
-		//TODO
+	private static void storeDoc(byte[] documentBytes, byte[] docSignature, int rID, String timeStamp, byte[] signedDoc, String confType, String clientID) throws IOException {
+		
+		//ojo, sign doc es la firma del server, docSingature la del registrador
+		Document doc = new Document(documentBytes, docSignature, rID, timeStamp, signedDoc, confType, clientID);
+		
+		FileOutputStream fout = new FileOutputStream("./docs/doc_" + rID + ".sig");
+		ObjectOutputStream oos = new ObjectOutputStream(fout);
+		oos.writeObject(doc);
+		
+		oos.close();
 	}
 	
 	//tells whether the user has permit to access the document and whether the document is private or public
-	private static boolean userHasPermit(int rID, byte[] clientAuthCert) {
-		//TODO
-		return true;
+	private static boolean userHasPermit(int rID, byte[] clientAuthCert) throws ClassNotFoundException, IOException {
+		//TODO es válida la función geetClient para ambos certificados?
+		
+		String clientID = getClientID(clientAuthCert);
+		
+		Document doc = getDoc(rID);
+		
+		boolean permit = false;
+		
+		if(doc.getConfType().equals("publico")){
+			permit = true;
+		} else if(clientID.equals(doc.getClientID())) {
+			permit = true;
+		}
+		
+		return permit;
 	}
 	
 	private static boolean validateClientAuthCert(byte[] clientAuthCert) {
@@ -452,7 +610,6 @@ public class Server {
 	
 	private static ServerSocket prepareConection() {
 	
-		Socket socket;
 		ServerSocket ss;
 	
 	    try {

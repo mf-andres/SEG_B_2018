@@ -1,11 +1,37 @@
+import java.io.Serializable;
 
-public class Document {
+public class Document implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3424675312007725098L;
+	
 	String name;
 	byte[] content;
 	String confType;
 	String TimeStamp;
 	
+	byte[] documentBytes;
+	byte[] docSignature;
+	int rID;
+	byte[] signedDoc;
+	String clientID;
+	
+	public Document(byte[] documentBytes, byte[] docSignature, int rID, String timeStamp, byte[] signedDoc, String confType, String clientID) {
+
+		this.documentBytes = documentBytes;
+		this.docSignature = docSignature; //la firma del cliente
+		this.rID = rID;
+		this.TimeStamp = timeStamp;
+		this.signedDoc = signedDoc; //la firma del server
+		this.confType = confType;
+		this.clientID = clientID;
+	}
+
+	public Document() {
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -36,5 +62,49 @@ public class Document {
 	
 	public void setTimeStamp(String timeStamp) {
 		TimeStamp = timeStamp;
+	}
+
+	public byte[] getDocumentBytes() {
+		return documentBytes;
+	}
+
+	public void setDocumentBytes(byte[] documentBytes) {
+		this.documentBytes = documentBytes;
+	}
+
+	public byte[] getDocSignature() {
+		return docSignature;
+	}
+
+	public void setDocSignature(byte[] docSignature) {
+		this.docSignature = docSignature;
+	}
+
+	public int getrID() {
+		return rID;
+	}
+
+	public void setrID(int rID) {
+		this.rID = rID;
+	}
+
+	public byte[] getSignedDoc() {
+		return signedDoc;
+	}
+
+	public void setSignedDoc(byte[] signedDoc) {
+		this.signedDoc = signedDoc;
+	}
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public String getClientID() {
+		return clientID;
+	}
+
+	public void setClientID(String clientID) {
+		this.clientID = clientID;
 	}
 }
