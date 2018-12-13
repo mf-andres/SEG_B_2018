@@ -16,6 +16,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -24,6 +25,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
+
+import com.sun.security.auth.X500Principal;
 
 public class Server {
 
@@ -505,7 +508,9 @@ public class Server {
 					say("Failed to store the document");
 				}
 				
-				String clientID = getClientID(clientSignCert);
+				//TODO clientSignCert debe ser un X508Certificate
+				//String clientID = getClientID(clientSignCert);
+				String clientID = "clientID";
 				
 				storeDoc(documentBytes, docSignature, RID, timeStamp, signedDoc, confType, clientID);
 				
@@ -517,9 +522,10 @@ public class Server {
 	}
 	
 	//obtiene el identificador del usuario
-	private static String getClientID(byte[] clientSignCert) {
+	private static String getClientID(X509Certificate clientSignCert) {
 		// TODO hacer que devuelva algo coherente
-		return "usuario1";
+		
+		return clientSignCert.getIssuerX500Principal().getName();
 	}
 
 	private static void say(String string) {
@@ -576,9 +582,10 @@ public class Server {
 	
 	//tells whether the user has permit to access the document and whether the document is private or public
 	private static boolean userHasPermit(int rID, byte[] clientAuthCert) throws ClassNotFoundException, IOException {
-		//TODO es válida la función geetClient para ambos certificados?
 		
-		String clientID = getClientID(clientAuthCert);
+		//TODO clientAuthCert debe ser un X509Certificate
+		//String clientID = getClientID(clientAuthCert);
+		String clientID = "clientID";
 		
 		Document doc = getDoc(rID);
 		

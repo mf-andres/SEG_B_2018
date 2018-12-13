@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Scanner;
@@ -116,7 +117,7 @@ public class Client {
 	//stores the recovered document in the user's file system
 	private static void storeDoc(byte[] hashedDoc, byte[] documentBytes) {
 		
-		Path path = Paths.get("doc_" + hashedDoc.toString());
+		Path path = Paths.get("doc_" + hashedDoc);
 		try {
 			Files.write(path, documentBytes);
 		} catch (IOException e) {
@@ -284,8 +285,23 @@ public class Client {
 
 	//hash the document and store it in the hashedDocsTree
 	private static byte[] hashDoc(byte[] documentBytes) {
-		//TODO
-		return documentBytes;
+
+		MessageDigest hash = null;
+
+		byte[] md = null;
+		
+		try {
+		
+			hash = MessageDigest.getInstance("MD5");
+			hash.update(documentBytes);
+			md = hash.digest();
+		
+		} catch (NoSuchAlgorithmException e) {
+			
+			e.printStackTrace();
+		}
+		
+		return md;
 	}
 
 	private static Object listDocs() throws IOException, ClassNotFoundException {
@@ -499,7 +515,6 @@ public class Client {
 	}
 
 	private static Object sendRecDocReq(byte[] myAuthCert, int RID, Socket socket) throws IOException, ClassNotFoundException{
-		//TODO recibir respuesta
 
 		Request request = new Request(myAuthCert, RID);
 
@@ -528,7 +543,6 @@ public class Client {
 	}
 
 	private static Object sendRegDocReq(String docName, String confType, byte[] cypheredDoc, byte[] signedDoc, byte[] mySignCert, Socket socket) throws IOException, ClassNotFoundException{
-		//TODO recibir respuesta
 
 		Request request = new Request(docName, confType, cypheredDoc, signedDoc);
 
