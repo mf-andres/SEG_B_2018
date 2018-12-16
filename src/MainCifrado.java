@@ -19,20 +19,33 @@ public class MainCifrado {
 	public static void main(String[] args) throws NoSuchAlgorithmException, CertificateException, InvalidKeyException,
 			UnrecoverableEntryException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidParameterSpecException, NoSuchProviderException, InvalidAlgorithmParameterException {
 
-		final String archivoClaro = "tux.png";
-		final String passKeyStore = "123456";
-		final String SecretKeyEntryAlias = "secretaServidor";
-		final String archivoKeyStore = "ServerKeyStore.jce";
-
 		// cifrado
 		try {
 
+			/* SIMETRICO OK
+			final String archivoClaro = "tux.png";
+			final String passKeyStore = "123456";
+			final String SecretKeyEntryAlias = "serverrsa";
+			final String archivoKeyStore = "ServerKeyStore.jce";
+			
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(new FileInputStream(archivoKeyStore), passKeyStore.toCharArray());
+			SymmetricCipher.cifrado(archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
+			*/
+			
+			///* ASIMETRICO
+			
+			final String archivoClaro = "tux.png";
+			final String passKeyStore = "123456";
 
-			//SymmetricCipher.cifrado(archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
+			final String SecretKeyEntryAlias = "rsa_server_cert";
+			final String archivoKeyStore = "ClientTrustStore.jce";
+
+			KeyStore keyStore = KeyStore.getInstance("JCEKS");
+			keyStore.load(new FileInputStream(archivoKeyStore), passKeyStore.toCharArray());
 			AsymmetricCipher.cifrado(archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
-
+			//*/
+			
 		} catch (KeyStoreException | IOException e) {
 			System.out.println("Se produjo un error al cargar el KeyStore: " + e.getMessage());
 			e.printStackTrace();
@@ -43,11 +56,19 @@ public class MainCifrado {
 
 // descifrado
 		try {
+			///* ASIMETRICO
+			
+			final String archivoClaro = "tux.png";
+			final String passKeyStore = "123456";
+			
+			final String SecretKeyEntryAlias = "rsa_server";
+			final String archivoKeyStore = "ServerKeyStore.jce";
+
 
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(new FileInputStream(archivoKeyStore), passKeyStore.toCharArray());
 
-			SymmetricCipher.descifrado("c_"+archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
+			AsymmetricCipher.descifrado("cifrado", keyStore, passKeyStore, SecretKeyEntryAlias);
 
 		} catch (KeyStoreException | IOException e) {
 			System.out.println("Se produjo un error al cargar el KeyStore descifrado: " + e.getMessage());

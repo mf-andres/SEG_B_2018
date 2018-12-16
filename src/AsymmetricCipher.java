@@ -1,8 +1,7 @@
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.AlgorithmParameters;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -11,8 +10,6 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
-import java.security.cert.CertificateException;
-import java.security.spec.InvalidParameterSpecException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -20,103 +17,112 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 public class AsymmetricCipher {
-	public static void cifrado(String archivoClaro, KeyStore keyStore, String passKeyStore,
-			String SecretKeyEntryAlias)
-			throws InvalidKeyException, NoSuchAlgorithmException, UnrecoverableEntryException, KeyStoreException,
-			NoSuchPaddingException, IOException, IllegalBlockSizeException, BadPaddingException {
+	public static void cifrado(String archivoClaro, KeyStore keyStore, String passKeyStore, String SecretKeyEntryAlias) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, KeyStoreException {
 
-		FileInputStream ftextoclaro = new FileInputStream(archivoClaro);
-		FileOutputStream ftextocifrado = new FileOutputStream("c_" + archivoClaro);
-		FileOutputStream parametrosCifrado = new FileOutputStream("parametrosCifrado");
-
-		byte bloqueclaro[] = new byte[2024];
-		byte bloquecifrado[] = new byte[2048];
-		String algoritmo = "AES";
-		String transformacion = "/CBC/PKCS5Padding";
-		int longclave = 128;
+		FileInputStream 	ftextoclaro 	= new FileInputStream(archivoClaro);		
+		FileOutputStream 	ftextocifrado 	= new FileOutputStream("cifrado");
+		String provider = "SunJCE";
+		String algoritmo 		= "RSA";
+		String transformacion1 	= "/ECB/PKCS1Padding"; //Relleno de longitud fija de 88 bits (11 bytes)
+		int longclave 			= 1024;               // NOTA -- Probar a subir este valor e ir viendo como 
+		                                              //         disminuye significativamente la velocidad de descifrado 
 		int longbloque;
+		long t, tbi, tbf; 	    // tiempos totales y por bucle
+		double lf; 				// longitud del fichero
 
-		// ************** LEER LA CLAVE PUBLICA DEL DESCIFRADOR **************************
-		PublicKey  publicKeyDescifrador = Claves.getClavePublica(keyStore, SecretKeyEntryAlias);
+		byte bloqueclaro[] 		= new byte[(longclave/8) - 11]; // *** NOTA: Calculo solo valido para relleno PKCS1Padding ****
+		byte bloquecifrado[] 	= new byte[2048];
+		
+		/************************************************************
+		 * LEER CLAVE PUBLICA
+		 ************************************************************/
+		PublicKey publicKey = Claves.getClavePublica(keyStore, SecretKeyEntryAlias);
+		
+		/************************************************************
+		 * CIFRAR
+		 ************************************************************/
+		System.out.println("*** INICIO CIFRADO " + algoritmo + "-" + longclave
+				+ " ************");
 
-		System.out.println("*** INICIO CIFRADO " + algoritmo + "-" + longclave + " ************");
-
-		Cipher cifrador = Cipher.getInstance(algoritmo + transformacion);
-
-		// Se cifra con la modalidad opaca de la clave
-
-		cifrador.init(Cipher.ENCRYPT_MODE, publicKeyDescifrador);
+		Cipher cifrador = Cipher.getInstance(algoritmo + 
+				                             transformacion1);
+		cifrador.init(Cipher.ENCRYPT_MODE, publicKey);
+		// Datos para medidas de velocidad cifrado
+		t = 0; lf = 0; tbi = 0;  tbf = 0;
 
 		while ((longbloque = ftextoclaro.read(bloqueclaro)) > 0) {
+
+			lf = lf + longbloque;
+
+			tbi = System.nanoTime();
+			
 			bloquecifrado = cifrador.update(bloqueclaro, 0, longbloque);
+			bloquecifrado = cifrador.doFinal();
+
+			tbf = System.nanoTime();
+			t = t + tbf - tbi;
+
 			ftextocifrado.write(bloquecifrado);
 		}
+		
+		// Escribir resultados velocidad cifrado
 
-		bloquecifrado = cifrador.doFinal();
-		ftextocifrado.write(bloquecifrado);
-
-		// obtencion de los paramentros del cifrado, es necesario para poder descifrar
-		// en bloque
-		byte[] parametros = cifrador.getParameters().getEncoded();
-		parametrosCifrado.write(parametros);
+		System.out.println("*** FIN CIFRADO " + algoritmo + "-" + longclave
+											  + " Provider: " + provider);
+		System.out.println("Bytes  cifrados = " + (int) lf);
+		System.out.println("Tiempo cifrado  = " + t / 1000000 + " mseg");
+		System.out.println("Velocidad       = " + (lf * 8 * 1000) / t + " Mpbs");
 
 		// Cerrar ficheros
 		ftextocifrado.close();
 		ftextoclaro.close();
-		parametrosCifrado.close();
-
-		System.out.println("Fin Cifrado");
 	}
+	
 	
 	
 	public static void descifrado(String archivoCifrado, KeyStore keyStore, String passKeyStore,
-			String SecretKeyEntryAlias) throws InvalidKeyException, NoSuchAlgorithmException,
-			UnrecoverableEntryException, KeyStoreException, NoSuchPaddingException, IOException,
-			IllegalBlockSizeException, BadPaddingException, InvalidParameterSpecException, NoSuchProviderException,
-			InvalidAlgorithmParameterException, CertificateException {
-		String algoritmo = "AES";
-		String transformacion = "/CBC/PKCS5Padding";
-		int longbloque;
+			String SecretKeyEntryAlias) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, KeyStoreException, UnrecoverableEntryException  {
 		String provider = "SunJCE";
-
+		String algoritmo = "RSA";
+		String transformacion1 = "/ECB/PKCS1Padding"; // Relleno de longitud fija de 88 bits (11 bytes)
+		int longclave = 1024; // NOTA -- Probar a subir este valor e ir viendo como
+		int longbloque;
+		
+		/************************************************************
+		 * LEER CLAVE
+		 ************************************************************/
+		
+		PrivateKey privateKey = Claves.getClavePrivada(keyStore, SecretKeyEntryAlias, passKeyStore);
+		
+		// *****************************************************************************
+		// DESCIFRAR
+		// *****************************************************************************
 		FileInputStream ftextocifrado2 = new FileInputStream(archivoCifrado);
-		FileOutputStream ftextoclaro2 = new FileOutputStream("d_" + archivoCifrado);
-		FileInputStream fparametros_in = new FileInputStream("parametrosCifrado");
+		FileOutputStream ftextoclaro2 = new FileOutputStream("descifrado.png");
 
-		byte bloquecifrado2[] = new byte[1024];
-		byte bloqueclaro2[] = new byte[1048];
+		byte bloquecifrado2[] = new byte[longclave / 8];
+		byte bloqueclaro2[] = new byte[512]; // *** Buffer sobredimensionado ***
 
-		System.out.println("*************** INICIO DESCIFRADO *****************");
-		
-		// obtengo mi clave privada
-		PrivateKey kreg = Claves.getClavePrivada(keyStore, SecretKeyEntryAlias, passKeyStore);
-		
+		System.out.println("\n*** INICIO DESCIFRADO " + algoritmo + "-" + longclave + " ************");
 
-		Cipher descifrador = Cipher.getInstance(algoritmo + transformacion, provider);
+		Cipher descifrador = Cipher.getInstance(algoritmo + transformacion1, provider);
 
-		AlgorithmParameters params = AlgorithmParameters.getInstance(algoritmo, provider);
-		byte[] paramSerializados = new byte[fparametros_in.available()];
+		descifrador.init(Cipher.DECRYPT_MODE, privateKey);
 
-		fparametros_in.read(paramSerializados);
-		params.init(paramSerializados);
-
-		System.out.println("Parametros del descifrado ... = " + params.toString());
-
-		descifrador.init(Cipher.DECRYPT_MODE, kreg, params);
-
+		// Datos para medidas de velocidad descifrado
 		while ((longbloque = ftextocifrado2.read(bloquecifrado2)) > 0) {
-
 			bloqueclaro2 = descifrador.update(bloquecifrado2, 0, longbloque);
+			bloqueclaro2 = descifrador.doFinal();
 			ftextoclaro2.write(bloqueclaro2);
 		}
 
-		bloqueclaro2 = descifrador.doFinal();
-		ftextoclaro2.write(bloqueclaro2);
-
 		ftextocifrado2.close();
 		ftextoclaro2.close();
-		fparametros_in.close();
-		System.out.println("*************** FIN DESCIFRADO *****************");
+
+		System.out.println("*** FIN DESCIFRADO " + algoritmo + "-" + longclave + " Provider: " + provider);
 	}
+
 	
+	
+
 }
