@@ -85,8 +85,8 @@ public class ClientSignVerifier {
 			NoSuchAlgorithmException, CertificateException {
 
 		KeyStore keyStore;
-		char[] passwordKeystore = "123456".toCharArray();
-		char[] passwordPrivateKey = "123456".toCharArray();
+		char[] passwordKeystore = "password".toCharArray();
+		char[] passwordPrivateKey = "password".toCharArray();
 		String SKCliente = "clientdsa";
 
 		keyStore = KeyStore.getInstance("JCEKS");
@@ -99,7 +99,7 @@ public class ClientSignVerifier {
 
 	private static void PublicKey() throws Exception {
 		KeyStore keyStore;
-		char[] passwordKeystore = "123456".toCharArray();
+		char[] passwordKeystore = "password".toCharArray();
 		String SKServidor = "server_dsa";
 
 		keyStore = KeyStore.getInstance("JCEKS");
@@ -111,7 +111,7 @@ public class ClientSignVerifier {
 	private static void TSAPublicKey() {
 
 		KeyStore keyStore;
-		char[] passwordKeystore = "123456".toCharArray();
+		char[] passwordKeystore = "password".toCharArray();
 
 		String SKClient = "tsa_dsa2";
 		PublicKey publickey = null;

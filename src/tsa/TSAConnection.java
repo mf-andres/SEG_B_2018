@@ -24,44 +24,7 @@ import messages.TimestampResponse;
 
 public class TSAConnection extends Thread {
 
-	private Socket server;
 	private static byte[] firma;
-
-	public TSAConnection(Socket server) {
-		this.server = server;
-	}
-
-	public void run() {
-
-		try {
-
-			System.out
-					.println("***************************** Connection established ********************************\n");
-			ObjectOutputStream sendObject = new ObjectOutputStream(server.getOutputStream());
-			ObjectInputStream receivedObject = new ObjectInputStream(server.getInputStream());
-			TimestampRequest peticion = (TimestampRequest) receivedObject.readObject();
-			String selloTemporalTSA = new Timestamp(System.currentTimeMillis()).toString();
-			System.out.println("Sello ---> " + selloTemporalTSA);
-			/********** Firma TSA ***********/
-			ByteArrayOutputStream escribirfirma = new ByteArrayOutputStream();
-			DataOutputStream write = new DataOutputStream(escribirfirma);
-			write.write(peticion.getHashDoc());
-			write.writeUTF(selloTemporalTSA);
-			byte[] firma = escribirfirma.toByteArray();
-			escribirfirma.close();
-			byte[] firmaTSA = firmarSelloTemporal(firma);
-			TimestampResponse respuesta = new TimestampResponse(selloTemporalTSA, firmaTSA);
-			sendObject.writeObject(respuesta);
-			System.out.println("Respuesta enviada al servidor...");
-		} catch (IOException e) {
-			System.out.println(
-					"\n************************** El servidor se ha desconectado ****************************\nError: "
-							+ e.getMessage());
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
 
 	public byte[] firmarSelloTemporal(byte[] firmaTSA) {
 
@@ -94,9 +57,9 @@ public class TSAConnection extends Thread {
 
 	private PrivateKey ClavePrivada() {
 		KeyStore keyStore;
-		char[] passwordKeystore = "123456".toCharArray();
-		char[] passwordPrivateKey = "123456".toCharArray();
-		String pathkeystore = TSA.GetKeyStorePath("tsaKeyStore");
+		char[] passwordKeystore = "password".toCharArray();
+		char[] passwordPrivateKey = "password".toCharArray();
+		String pathkeystore = "keyStoreTSAPath";
 		String SKServidor = "tsa_dsa2";
 		PrivateKey privateKey = null;
 

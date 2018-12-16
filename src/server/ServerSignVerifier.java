@@ -98,8 +98,8 @@ public class ServerSignVerifier {
 			NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException {
 
 		KeyStore keyStores;
-		char[] pass = "123456".toCharArray();
-		char[] passKey = "123456".toCharArray();
+		char[] pass = "password".toCharArray();
+		char[] passKey = "password".toCharArray();
 		String algorithm;
 
 		keyStores = KeyStore.getInstance("JCEKS");
@@ -153,8 +153,8 @@ public class ServerSignVerifier {
 		System.out.println("Decyphering doc");
 
 		KeyStore keyStore;
-		char[] pass = "123456".toCharArray();
-		char[] passKey = "123456".toCharArray();
+		char[] pass = "password".toCharArray();
+		char[] passKey = "password".toCharArray();
 		String algorithm;
 		String transform = "";
 
@@ -206,7 +206,7 @@ public class ServerSignVerifier {
 	private static void PublicKey() {
 
 		KeyStore keyStore;
-		char[] passwordKeystore = "123456".toCharArray();
+		char[] passwordKeystore = "password".toCharArray();
 		String SKCliente = "client_dsa";
 		PublicKey publickey = null;
 		try {
@@ -221,8 +221,8 @@ public class ServerSignVerifier {
 
 	private PrivateKey PrivateKey() {
 		KeyStore keyStore;
-		char[] passwordKeystore = "123456".toCharArray();
-		char[] passwordPrivateKey = "123456".toCharArray();
+		char[] passwordKeystore = "password".toCharArray();
+		char[] passwordPrivateKey = "password".toCharArray();
 		String SKServidor = "serverdsa";
 		PrivateKey privateKey = null;
 
@@ -243,7 +243,7 @@ public class ServerSignVerifier {
 	private static void TSAPublicKey() {
 
 		KeyStore keyStore;
-		char[] passwordKeystore = "123456".toCharArray();
+		char[] passwordKeystore = "password".toCharArray();
 		String SKCliente = "tsa_dsa2";
 		PublicKey publickey = null;
 		try {
@@ -265,7 +265,7 @@ public class ServerSignVerifier {
 		ByteArrayInputStream validate = new ByteArrayInputStream(sigTSA);
 		TSAPublicKey();
 		String algorithm = publicKeyTSA.getAlgorithm().equalsIgnoreCase("RSA") ? "MD5withRSA" : "SHA1withDSA";
-		// Creacion del objeto para firmar y inicializacion del objeto
+		// Creacion del objeto para firmar e inicializacion del objeto
 		Signature verifier = Signature.getInstance(algorithm);
 		// return true;
 
