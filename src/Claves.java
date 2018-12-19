@@ -21,6 +21,8 @@ public class Claves {
 	}
 
 	public static PrivateKey getClavePrivada(KeyStore keyStore, String SecretKeyEntryAlias,String passKeyStore ) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException {
+		System.out.println("La contraseña es: "+passKeyStore);
+		passKeyStore="123456";
 		char[] key_password = passKeyStore.toCharArray();
 		KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(SecretKeyEntryAlias,
 				new KeyStore.PasswordProtection(key_password));

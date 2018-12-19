@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
@@ -21,6 +22,9 @@ import java.security.cert.CertificateException;
 import java.util.Scanner;
 import java.util.TreeMap;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -127,9 +131,19 @@ public class Client {
 	}
 
 	//asymmetrically, with the server public key, to send the doc
-	private static byte[] cypherDoc(byte[] documentBytes, byte[] serverPublicKey) {
-		//TODO
-		return documentBytes;
+	private static byte[] cipherDoc(String docName, byte[] serverPublicKey) {
+		
+		byte[] cDoc = null;
+		
+		try {
+			cDoc = AsymmetricCipher.cifrado(docName, trustStore, passphrase.toString(), "rsa_server_cert");
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		} 
+
+		return cDoc;
 	}
 
 	//asymmetrically, with my private key, to receive the doc
@@ -189,7 +203,7 @@ public class Client {
 		//			confType = "private";
 		//		}
 
-		confType = "public";
+		confType = "private";
 
 		return confType;
 	}
@@ -202,7 +216,7 @@ public class Client {
 
 		//		say("Type the name of the file that you want to send...");
 		//		String fileName = in.nextLine();
-		String fileName = "turtle.jpg";
+		String fileName = "tux.png";
 
 		File file = new File(fileName);
 		byte[] fileContent;
@@ -423,6 +437,7 @@ public class Client {
 		if(document == null) {
 
 			say("Unable to retrive document");
+			return null;
 		}
 
 		String docName = document.getName();
@@ -435,7 +450,13 @@ public class Client {
 
 		byte[] myPrivateKey = getMyPrivateKey();
 
-		byte[] cypheredDoc = cypherDoc(docContent, serverPublicKey);
+		byte[] cypheredDoc = cipherDoc(docName, serverPublicKey);
+		
+		if(cypheredDoc == null) {
+			
+			say("Unable to encrypt the document");
+			return null;
+		}
 
 		byte[] signedDoc = signDoc(cypheredDoc, myPrivateKey);
 
@@ -471,6 +492,8 @@ public class Client {
 					byte[] hashedDoc = hashDoc(docContent);
 
 					hashedDocsTree.put(RID, hashedDoc);
+					
+					say("Message digest = " + hashedDoc);
 
 					//TODO para hacer las pruebas es mejor no borrar de momento
 					//deleteDocAndSignature(docName);
@@ -639,9 +662,13 @@ public class Client {
 	}
 
 	//with my private key, over the ciphered doc
-	private static byte[] signDoc(byte[] cypheredDoc, byte[] myPrivateKey) {
-		//TODO
-		return cypheredDoc;
+	private static byte[] signDoc(byte[] cipheredDoc, byte[] myPrivateKey) {
+		
+		ClientSignVerifier csv = new ClientSignVerifier(keyStore, trustStore);
+		
+		csv.FirmarDocumento(cipheredDoc);
+		
+		return csv.getSign();
 	}
 
 	private static boolean validateServerSignCert(byte[] serverSignCert) {

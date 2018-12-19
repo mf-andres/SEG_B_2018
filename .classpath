@@ -6,10 +6,5 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Mery/git/SEG_B_2018/lib/commons-lang3-3.8.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Mery/git/SEG_B_2018/lib/commons-lang3-3.8.1-javadoc.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Mery/git/SEG_B_2018/lib/commons-lang3-3.8.1-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Mery/git/SEG_B_2018/lib/commons-lang3-3.8.1-tests.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Mery/git/SEG_B_2018/lib/commons-lang3-3.8.1-test-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -12,14 +12,23 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidParameterSpecException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
@@ -79,8 +88,8 @@ public class Server {
 	
 				try {
 					registerDocResponse(request, socket);
-				} catch (IOException e1) {
-					e1.printStackTrace();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				break;
 	
@@ -125,14 +134,58 @@ public class Server {
 
 	//symmetric ciphering with secret key
 	private static byte[] cypherDocForStorage(byte[] documentBytes) {
-		//TODO
-		return documentBytes;
+
+		byte[] cDoc = null;
+		
+		try {
+			cDoc = SymmetricCipher.cifrado(documentBytes, keyStore, "123456", "aes_server");
+		} catch (InvalidKeyException | NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException
+				| NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | IOException e) {
+			
+			e.printStackTrace();
+		}
+		
+		//TODO para checkear 
+		byte[] uDoc;
+		try {
+			uDoc = SymmetricCipher.descifrado(cDoc, keyStore, "123456", "aes_server");
+		
+			Path path = Paths.get("doc_on_server_ciph_and_deciph.png");
+			try {
+				Files.write(path, uDoc);
+			} catch (IOException e) {
+				e.printStackTrace();
+				say("Failed to store the document");
+			}
+			
+		} catch (InvalidKeyException | NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException
+				| NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException
+				| InvalidParameterSpecException | NoSuchProviderException | InvalidAlgorithmParameterException
+				| CertificateException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return cDoc;
 	}
 
 	//assymetrically to receive from the client
-	private static byte[] decypherDoc(byte[] cypheredDoc) {
-		//TODO
-		return cypheredDoc;
+	private static byte[] decipherDoc(byte[] cipheredDoc) {
+
+		byte[] dDoc = null;
+
+		try {
+		
+			dDoc = AsymmetricCipher.descifrado(cipheredDoc, keyStore, passphrase.toString(), "rsa_server");
+	
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException
+				| IllegalBlockSizeException | BadPaddingException | KeyStoreException | UnrecoverableEntryException
+				| IOException e) {
+		
+			e.printStackTrace();
+		}
+		
+		return dDoc;
 	}
 
 	//symmetric deciphering with secret key
@@ -460,7 +513,7 @@ public class Server {
 		}
 	}
 	
-	private static void registerDocResponse(Request request, Socket socket) throws IOException {
+	private static void registerDocResponse(Request request, Socket socket) throws Exception {
 	
 		//String docName = request.getDocName(); //hay que pensar si devolver esto para guardar después en el cliente
 		String confType = request.getConfType();
@@ -487,20 +540,27 @@ public class Server {
 			
 			} else {
 				
-				byte[] documentBytes = decypherDoc(cypheredDoc);
+				byte[] documentBytes = decipherDoc(cypheredDoc);
+				
+				if(documentBytes == null) {
+					
+					say("Unable to decipher document");
+					return;
+				}
+				
 				int RID = getRID();
 				String timeStamp = getTimestamp();
 				byte[] myPrivateKey = getMyPrivateKey();
 				
 				byte[] signedDoc = signDoc( RID, timeStamp, documentBytes, docSignature,myPrivateKey);
 				
-				if( confType.equals("privado") ) {
+				if( confType.equals("private") ) {
 					
 					documentBytes = cypherDocForStorage(documentBytes);
 				}
 				
 				//para probar el registro
-				Path path = Paths.get("doc_on_server");
+				Path path = Paths.get("doc_on_server.png");
 				try {
 					Files.write(path, documentBytes);
 				} catch (IOException e) {
@@ -610,9 +670,13 @@ public class Server {
 		return true;
 	}
 	
-	private static boolean verifyDoc(byte[] cypheredDoc, byte[] docSignature) {
-		//TODO
-		return true;
+	private static boolean verifyDoc(byte[] cypheredDoc, byte[] docSignature) throws Exception {
+
+		ServerSignVerifier ssv = new ServerSignVerifier(keyStore, trustStore);
+		
+		System.out.println("Verificado?");
+		
+		return ssv.VerifyClientSign(cypheredDoc, docSignature);
 	}
 	
 	private static ServerSocket prepareConection() {

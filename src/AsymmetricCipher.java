@@ -1,4 +1,6 @@
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,10 +19,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 public class AsymmetricCipher {
-	public static void cifrado(String archivoClaro, KeyStore keyStore, String passKeyStore, String SecretKeyEntryAlias) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, KeyStoreException {
-
+	public static byte[] cifrado(String archivoClaro, KeyStore keyStore, String passKeyStore, String SecretKeyEntryAlias) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, KeyStoreException {
+		
 		FileInputStream 	ftextoclaro 	= new FileInputStream(archivoClaro);		
-		FileOutputStream 	ftextocifrado 	= new FileOutputStream("cifrado");
+		ByteArrayOutputStream 	ftextocifrado 	= new ByteArrayOutputStream();
 		String provider = "SunJCE";
 		String algoritmo 		= "RSA";
 		String transformacion1 	= "/ECB/PKCS1Padding"; //Relleno de longitud fija de 88 bits (11 bytes)
@@ -76,11 +78,13 @@ public class AsymmetricCipher {
 		// Cerrar ficheros
 		ftextocifrado.close();
 		ftextoclaro.close();
+		
+		return ftextocifrado.toByteArray();
 	}
 	
 	
 	
-	public static void descifrado(String archivoCifrado, KeyStore keyStore, String passKeyStore,
+	public static byte[] descifrado(byte[] archivoCifrado, KeyStore keyStore, String passKeyStore,
 			String SecretKeyEntryAlias) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, KeyStoreException, UnrecoverableEntryException  {
 		String provider = "SunJCE";
 		String algoritmo = "RSA";
@@ -97,8 +101,8 @@ public class AsymmetricCipher {
 		// *****************************************************************************
 		// DESCIFRAR
 		// *****************************************************************************
-		FileInputStream ftextocifrado2 = new FileInputStream(archivoCifrado);
-		FileOutputStream ftextoclaro2 = new FileOutputStream("descifrado.png");
+		ByteArrayInputStream ftextocifrado2 = new ByteArrayInputStream(archivoCifrado);
+		ByteArrayOutputStream ftextoclaro2 = new ByteArrayOutputStream();
 
 		byte bloquecifrado2[] = new byte[longclave / 8];
 		byte bloqueclaro2[] = new byte[512]; // *** Buffer sobredimensionado ***
@@ -120,6 +124,8 @@ public class AsymmetricCipher {
 		ftextoclaro2.close();
 
 		System.out.println("*** FIN DESCIFRADO " + algoritmo + "-" + longclave + " Provider: " + provider);
+	
+		return ftextoclaro2.toByteArray();
 	}
 
 	

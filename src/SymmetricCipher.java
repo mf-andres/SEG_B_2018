@@ -7,13 +7,13 @@ import javax.crypto.*;
 import javax.crypto.spec.*;
 
 public class SymmetricCipher {
-	public static void cifrado(String archivoClaro, KeyStore serverKeystore, String passKeyStore,
+	public static byte[] cifrado(byte[] archivoClaro, KeyStore serverKeystore, String passKeyStore,
 			String SecretKeyEntryAlias)
 			throws InvalidKeyException, NoSuchAlgorithmException, UnrecoverableEntryException, KeyStoreException,
 			NoSuchPaddingException, IOException, IllegalBlockSizeException, BadPaddingException {
 
-		FileInputStream ftextoclaro = new FileInputStream(archivoClaro);
-		FileOutputStream ftextocifrado = new FileOutputStream("c_" + archivoClaro);
+		ByteArrayInputStream ftextoclaro = new ByteArrayInputStream(archivoClaro);
+		ByteArrayOutputStream ftextocifrado = new ByteArrayOutputStream();
 		FileOutputStream parametrosCifrado = new FileOutputStream("parametrosCifrado");
 
 		byte bloqueclaro[] = new byte[2024];
@@ -54,9 +54,10 @@ public class SymmetricCipher {
 		parametrosCifrado.close();
 
 		System.out.println("Fin Cifrado");
+		return ftextocifrado.toByteArray();
 	}
 
-	public static void descifrado(String archivoCifrado, KeyStore serverKeystore, String passKeyStore,
+	public static byte[] descifrado(byte[] archivoCifrado, KeyStore serverKeystore, String passKeyStore,
 			String SecretKeyEntryAlias) throws InvalidKeyException, NoSuchAlgorithmException,
 			UnrecoverableEntryException, KeyStoreException, NoSuchPaddingException, IOException,
 			IllegalBlockSizeException, BadPaddingException, InvalidParameterSpecException, NoSuchProviderException,
@@ -66,8 +67,8 @@ public class SymmetricCipher {
 		int longbloque;
 		String provider = "SunJCE";
 
-		FileInputStream ftextocifrado2 = new FileInputStream(archivoCifrado);
-		FileOutputStream ftextoclaro2 = new FileOutputStream("d_" + archivoCifrado);
+		ByteArrayInputStream ftextocifrado2 = new ByteArrayInputStream(archivoCifrado);
+		ByteArrayOutputStream ftextoclaro2 = new ByteArrayOutputStream();
 		FileInputStream fparametros_in = new FileInputStream("parametrosCifrado");
 
 		byte bloquecifrado2[] = new byte[1024];
@@ -108,6 +109,7 @@ public class SymmetricCipher {
 		ftextoclaro2.close();
 		fparametros_in.close();
 		System.out.println("*************** FIN DESCIFRADO *****************");
+		return ftextoclaro2.toByteArray();
 	}
 
 }

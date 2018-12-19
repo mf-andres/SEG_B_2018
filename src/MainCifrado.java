@@ -1,5 +1,8 @@
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
@@ -19,6 +22,9 @@ public class MainCifrado {
 	public static void main(String[] args) throws NoSuchAlgorithmException, CertificateException, InvalidKeyException,
 			UnrecoverableEntryException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidParameterSpecException, NoSuchProviderException, InvalidAlgorithmParameterException {
 
+		byte[] archivoCifrado;
+		byte[] archivoDescifrado;
+		
 		// cifrado
 		try {
 
@@ -43,7 +49,7 @@ public class MainCifrado {
 
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(new FileInputStream(archivoKeyStore), passKeyStore.toCharArray());
-			AsymmetricCipher.cifrado(archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
+			archivoCifrado = AsymmetricCipher.cifrado(archivoClaro, keyStore, passKeyStore, SecretKeyEntryAlias);
 			//*/
 			
 		} catch (KeyStoreException | IOException e) {
@@ -68,13 +74,21 @@ public class MainCifrado {
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(new FileInputStream(archivoKeyStore), passKeyStore.toCharArray());
 
-			AsymmetricCipher.descifrado("cifrado", keyStore, passKeyStore, SecretKeyEntryAlias);
+			archivoDescifrado = AsymmetricCipher.descifrado(archivoCifrado, keyStore, passKeyStore, SecretKeyEntryAlias);
 
 		} catch (KeyStoreException | IOException e) {
 			System.out.println("Se produjo un error al cargar el KeyStore descifrado: " + e.getMessage());
 			e.printStackTrace();
 			return;
 		}
+		
+		Path path = Paths.get("descifrado.png");
+		try {
+			Files.write(path, archivoDescifrado);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		System.out.println("fin descifrado");
 	}
 
