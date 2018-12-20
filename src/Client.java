@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -13,12 +14,16 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Certificate;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Scanner;
 import java.util.TreeMap;
 
@@ -131,7 +136,7 @@ public class Client {
 	}
 
 	//asymmetrically, with the server public key, to send the doc
-	private static byte[] cipherDoc(String docName, byte[] serverPublicKey) {
+	private static byte[] cipherDoc(byte[] docName) {
 		
 		byte[] cDoc = null;
 		
@@ -147,9 +152,22 @@ public class Client {
 	}
 
 	//asymmetrically, with my private key, to receive the doc
-	private static byte[] decypherDoc(byte[] cypheredDoc, byte[] myPrivateKey) {
-		//TODO
-		return cypheredDoc;
+	private static byte[] decypherDoc(byte[] cipheredDoc) {
+
+		byte[] dDoc = null;
+
+		try {
+		
+			dDoc = AsymmetricCipher.descifrado(cipheredDoc, keyStore, "123456", "rsa_client");
+	
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException
+				| IllegalBlockSizeException | BadPaddingException | KeyStoreException | UnrecoverableEntryException
+				| IOException e) {
+		
+			e.printStackTrace();
+		}
+		
+		return dDoc;
 	}
 
 	//get the action the user wants to use
@@ -235,40 +253,42 @@ public class Client {
 		return doc;
 	}
 
-	private static byte[] getMyAuthCert() {
-		//TODO
-		return "MYAUTHCERT".getBytes();
-	}
-
-	//to sign the doc
-	private static byte[] getMyPrivateKey() {
-		//TODO
-		return "PRIVATEKEY".getBytes();	
+	private static X509Certificate getMyAuthCert() {
+		
+		return getMySignCert();
 	}
 
 	//to obtain the public key certificate for signing in order to send it to the server
-	private static byte[] getMySignCert() {
-		//TODO
-		return "MYSIGNCERT".getBytes();
+	private static X509Certificate getMySignCert() {
+		
+		X509Certificate cert = null; 
+		
+		try {
+			
+			cert = (X509Certificate) keyStore.getCertificate("rsa_client");
+		
+		} catch (KeyStoreException e) {
+		
+			e.printStackTrace();
+		}
+		
+		say("cert issuer " + cert.getIssuerX500Principal().getName());
+		
+		return cert;
 	}
 
 	//ask the user about the register identifier of the document it wants to recover 
 	private static int getRID() {
-		//TODO
+		//TODO let the user
 		
 		int rid;
 		
 //		say("Type the RID of the document you want to recover...");
 //		rid = Integer.parseInt(in.nextLine().trim());
 		
-		rid = 1;
+		rid = 0;
 		
 		return rid;
-	}
-
-	private static byte[] getServerPublicKey(){
-		//TODO 
-		return "SERVERPUBLICKEY".getBytes();
 	}
 
 	private static String getSuite() throws NoSuchAlgorithmException {
@@ -332,9 +352,9 @@ public class Client {
 
 		String confType = getConfType();
 
-		byte[] myAuthCert = getMyAuthCert();
+		X509Certificate myAuthCert = getMyAuthCert();
 
-		// TODO aquí la forma de imprimir la respuesta quizá no sea la más indicada
+		//TODO aqu� la forma de imprimir puede falla (|n a la hora de construir la lista
 		String response = sendListDocReq(confType, myAuthCert, socket);
 
 		say(response);
@@ -356,7 +376,7 @@ public class Client {
 			return null;
 		}
 
-		byte[] myAuthCert = getMyAuthCert();
+		X509Certificate myAuthCert = getMyAuthCert();
 
 		int RID = getRID();
 
@@ -368,14 +388,9 @@ public class Client {
 
 		} else {
 
-			// TODO duda: si siempre codificamos la comunicación no tiene por qué devolverse confType
-			//String confType = ((Response) response).getConfType();
-			// TODO duda : la especificación indica que se devolverá el RID pero ya debería ser el que le pasamos nosotros
-			// opto por trabajar con el que le pasamos nosotros
-			//int respRID = ((Response) response).getRID();
 			String timeStamp = ((Response) response).getTimeStamp();
 			byte[] cypheredDoc = ((Response) response).getCypheredDoc();
-			byte[] serverSignature = ((Response) response).getServerSignature();
+			byte[] signedDoc = ((Response) response).getSignedDoc();
 			byte[] serverSignCert = ((Response) response).getServerSignCert();
 
 			if( ! validateServerSignCert(serverSignCert) ){
@@ -384,14 +399,11 @@ public class Client {
 
 			} else {
 
-				byte[] myPrivateKey = getMyPrivateKey();
-				byte[] documentBytes = decypherDoc(cypheredDoc, myPrivateKey);
+				byte[] documentBytes = decypherDoc(cypheredDoc);
 
-				// TODO duda: en principio siempre ciframos en comunicación, pero en este punto el documento no es claro
-				// propongo optar por cifrar siempre
-
-				// TODO duda: aquí hay que ver si se puede usar la misma función para ambas funciones
-				if( ! verifyServerSign(serverSignature, documentBytes, null)) {
+				byte[] sByClientDoc = signDoc(documentBytes);
+				
+				if( ! verifyServerSign(RID, timeStamp, documentBytes,  sByClientDoc, signedDoc)) {
 
 					say("FALLO DE FIRMA DEL REGISTRADOR");
 
@@ -400,9 +412,7 @@ public class Client {
 					byte[] hashedDoc = hashDoc(documentBytes);
 					byte[] OriginalHashedDoc = hashedDocsTree.get(RID);
 
-					//TODO esto es para la prueba, una vez se devuelva un documento v�lido hay que cambiarlo
-					//if( ! hashedDoc.equals(OriginalHashedDoc) ) {
-					if(false) {
+					if( ! hashedDoc.equals(OriginalHashedDoc) ) {
 						
 						say("DOCUMENTO ALTERADO POR EL REGISTRADOR");
 
@@ -446,11 +456,7 @@ public class Client {
 
 		String confType = getConfType();
 
-		byte[] serverPublicKey = getServerPublicKey();
-
-		byte[] myPrivateKey = getMyPrivateKey();
-
-		byte[] cypheredDoc = cipherDoc(docName, serverPublicKey);
+		byte[] cypheredDoc = cipherDoc(docContent);
 		
 		if(cypheredDoc == null) {
 			
@@ -458,9 +464,9 @@ public class Client {
 			return null;
 		}
 
-		byte[] signedDoc = signDoc(cypheredDoc, myPrivateKey);
+		byte[] signedDoc = signDoc(cypheredDoc);
 
-		byte[] mySignCert = getMySignCert();
+		X509Certificate mySignCert = getMySignCert();
 
 		Object response = sendRegDocReq(docName, confType, cypheredDoc, signedDoc, mySignCert, socket);
 
@@ -481,7 +487,7 @@ public class Client {
 
 			} else {
 
-				if( ! verifyServerSign(serverSignature, docContent, signedDoc) ) {
+				if( ! verifyServerSign(RID, timeStamp, docContent, signedDoc, serverSignature) ) {
 
 					say("FIRMA INCORRECTA DEL REGISTRADOR");
 
@@ -517,7 +523,7 @@ public class Client {
 		System.out.println(string);
 	}
 
-	private static String sendListDocReq(String confType, byte[] myAuthCert, Socket socket) throws IOException, ClassNotFoundException{
+	private static String sendListDocReq(String confType, X509Certificate myAuthCert, Socket socket) throws IOException, ClassNotFoundException{
 		
 		Request request = new Request(confType, myAuthCert);
 
@@ -537,7 +543,7 @@ public class Client {
 		return response;	
 	}
 
-	private static Object sendRecDocReq(byte[] myAuthCert, int RID, Socket socket) throws IOException, ClassNotFoundException{
+	private static Object sendRecDocReq(X509Certificate myAuthCert, int RID, Socket socket) throws IOException, ClassNotFoundException{
 
 		Request request = new Request(myAuthCert, RID);
 
@@ -565,9 +571,9 @@ public class Client {
 		return response;
 	}
 
-	private static Object sendRegDocReq(String docName, String confType, byte[] cypheredDoc, byte[] signedDoc, byte[] mySignCert, Socket socket) throws IOException, ClassNotFoundException{
+	private static Object sendRegDocReq(String docName, String confType, byte[] cypheredDoc, byte[] signedDoc, X509Certificate mySignCert, Socket socket) throws IOException, ClassNotFoundException{
 
-		Request request = new Request(docName, confType, cypheredDoc, signedDoc);
+		Request request = new Request(docName, confType, cypheredDoc, signedDoc, mySignCert);
 
 		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 
@@ -662,7 +668,7 @@ public class Client {
 	}
 
 	//with my private key, over the ciphered doc
-	private static byte[] signDoc(byte[] cipheredDoc, byte[] myPrivateKey) {
+	private static byte[] signDoc(byte[] cipheredDoc) {
 		
 		ClientSignVerifier csv = new ClientSignVerifier(keyStore, trustStore);
 		
@@ -676,10 +682,32 @@ public class Client {
 		return true;
 	}
 
-	private static boolean verifyServerSign(byte[] serverSignature, byte[] documentBytes, byte[] signedDoc) {
-		//TODO esta función es probable que esté mal definida. Hay que tener en cuenta la respuesta del servidor a recgiste doc
-		//hay que estudiarlo
-		return true;
+	private static boolean verifyServerSign(int RID, String timeStamp, byte[] docContent, byte[] signedDoc, byte[] serverSignature) {
+
+		boolean verify = false;
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		
+		try {
+
+			baos.write(RID);
+			baos.write(timeStamp.getBytes());
+			baos.write(docContent);
+			baos.write(signedDoc);
+			
+		
+		byte[] sigServC = baos.toByteArray();
+		
+		ClientSignVerifier csv = new ClientSignVerifier(keyStore, trustStore);
+		
+		verify = csv.VerifyServer(sigServC, serverSignature);
+		
+		} catch (Exception e) {
+		
+			e.printStackTrace();
+		}
+		
+		return verify;
 	}
 
 

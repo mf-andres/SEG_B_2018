@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.security.cert.X509Certificate;
 
 public class Request implements Serializable {
 
@@ -12,25 +13,26 @@ public class Request implements Serializable {
 	String confType;
 	byte[] cypheredDoc;
 	byte[] signedDoc;
-	byte[] signCert;
-	byte[] authCert;
+	X509Certificate signCert;
+	X509Certificate authCert;
 	int rid;
 	
-	public Request(String docName, String confType, byte[] cypheredDoc, byte[] signedDoc) {
+	public Request(String docName, String confType, byte[] cypheredDoc, byte[] signedDoc, X509Certificate mySignCert) {
 	
 		this.docName = docName;
 		this.confType = confType;
 		this.cypheredDoc = cypheredDoc;
 		this.signedDoc = signedDoc;
+		this.signCert = mySignCert;
 	}
 	
-	public Request(String confType, byte[] authCert) {
+	public Request(String confType, X509Certificate authCert) {
 		
 		this.confType = confType;
 		this.authCert = authCert;
 	}
 
-	public Request(byte[] authCert, int rid) {
+	public Request(X509Certificate authCert, int rid) {
 
 		this.authCert = authCert;
 		this.rid = rid;
@@ -66,16 +68,16 @@ public class Request implements Serializable {
 	public void setSignedDoc(byte[] signDoc) {
 		this.signedDoc = signDoc;
 	}
-	public byte[] getSignCert() {
+	public X509Certificate getSignCert() {
 		return signCert;
 	}
-	public void setSignCert(byte[] signCert) {
+	public void setSignCert(X509Certificate signCert) {
 		this.signCert = signCert;
 	}
-	public byte[] getAuthCert() {
+	public X509Certificate getAuthCert() {
 		return authCert;
 	}
-	public void setAuthCert(byte[] authCert) {
+	public void setAuthCert(X509Certificate authCert) {
 		this.authCert = authCert;
 	}
 	public int getRID() {

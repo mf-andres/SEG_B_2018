@@ -19,9 +19,9 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 public class AsymmetricCipher {
-	public static byte[] cifrado(String archivoClaro, KeyStore keyStore, String passKeyStore, String SecretKeyEntryAlias) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, KeyStoreException {
+	public static byte[] cifrado(byte[] archivoClaro, KeyStore keyStore, String passKeyStore, String SecretKeyEntryAlias) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, KeyStoreException {
 		
-		FileInputStream 	ftextoclaro 	= new FileInputStream(archivoClaro);		
+		ByteArrayInputStream ftextoclaro = new ByteArrayInputStream(archivoClaro);
 		ByteArrayOutputStream 	ftextocifrado 	= new ByteArrayOutputStream();
 		String provider = "SunJCE";
 		String algoritmo 		= "RSA";
