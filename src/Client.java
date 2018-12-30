@@ -24,6 +24,7 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.TreeMap;
 
@@ -486,7 +487,14 @@ public class Client {
 				say("CERTIFICADO DE REGISTRADOR INCORRECTO");
 
 			} else {
-
+				
+				say("RID " + RID);
+				say("timeStamp " + timeStamp);
+				say("docContent " + Arrays.toString(docContent));
+				say("signeDoc " + Arrays.toString(signedDoc));
+				say("serverSignature " + Arrays.toString(serverSignature));
+				
+				//signed doc es el firmado aquí
 				if( ! verifyServerSign(RID, timeStamp, docContent, signedDoc, serverSignature) ) {
 
 					say("FIRMA INCORRECTA DEL REGISTRADOR");

@@ -17,11 +17,11 @@ public class Response implements Serializable {
 	byte[] cypheredDoc;
 	byte[] authCert;
 	
-	public Response(int rid, String timeStamp, byte[] signedDoc, byte[] authCert) {
+	public Response(int rid, String timeStamp, byte[] serverSignature, byte[] authCert) {
 		
 		this.rid = rid;
 		this.timeStamp = timeStamp;
-		this.signedDoc = signedDoc;
+		this.serverSignature = serverSignature;
 		this.authCert = authCert;
 	}
 	

@@ -26,6 +26,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidParameterSpecException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -515,7 +516,7 @@ public class Server {
 		//String docName = request.getDocName(); //hay que pensar si devolver esto para guardar después en el cliente
 		String confType = request.getConfType();
 		byte[] cypheredDoc = request.getCypheredDoc();
-		byte[] docSignature = request.getSignedDoc();
+		byte[] signedDoc = request.getSignedDoc();
 		X509Certificate clientSignCert = request.getSignCert();
 		
 		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -529,7 +530,7 @@ public class Server {
 			
 		} else {
 			
-			if( ! verifyDoc(cypheredDoc, docSignature) ) {
+			if( ! verifyDoc(cypheredDoc, signedDoc) ) {
 				
 				String error = "FIRMA INCORRECTA";
 				say(error);
@@ -548,9 +549,17 @@ public class Server {
 				int RID = getRID();
 				String timeStamp = getTimestamp();
 				
-				byte[] signedDoc = signDoc( RID, timeStamp, documentBytes, docSignature);
+				say("RID " + RID);
+				say("timeStamp " + timeStamp);
+				say("documentBytes " + Arrays.toString(documentBytes));
+				say("signedDoc " + Arrays.toString(signedDoc));
 				
-				if(signedDoc == null) {
+				byte[] serverSignature = signDoc( RID, timeStamp, documentBytes, signedDoc);
+				
+				say("");
+				say("serverSignature " + serverSignature);
+				
+				if(serverSignature == null) {
 					
 					say("Unable to sign doc for storage");
 					return;
@@ -573,11 +582,11 @@ public class Server {
 				String clientID = getClientID(clientSignCert);
 				say("client id " + clientID);//TODO probar que el client id se recupera correctamente
 				
-				storeDoc(documentBytes, docSignature, RID, timeStamp, signedDoc, confType, clientID);
+				storeDoc(documentBytes, signedDoc, RID, timeStamp, serverSignature, confType, clientID);
 				
 				byte[] myCertAuth = getMyCertAuth();
 				
-				sendRegDocRes(RID, timeStamp, signedDoc, myCertAuth, out);
+				sendRegDocRes(RID, timeStamp, serverSignature, myCertAuth, out);
 			}
 		}
 	}
@@ -615,9 +624,9 @@ public class Server {
 	}
 	
 	//elaborate register document response
-	private static void sendRegDocRes(int RID, String timeStamp, byte[] signedDoc, byte[] myAuthCert, ObjectOutputStream out) throws IOException{
+	private static void sendRegDocRes(int RID, String timeStamp, byte[] serverSignature, byte[] myAuthCert, ObjectOutputStream out) throws IOException{
 		
-		Response response = new Response(RID, timeStamp, signedDoc, myAuthCert);
+		Response response = new Response(RID, timeStamp, serverSignature, myAuthCert);
 		out.writeInt((int)1);
 		out.writeObject(response);
 	}
