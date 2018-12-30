@@ -13,18 +13,18 @@ public class Document implements Serializable{
 	String TimeStamp;
 	
 	byte[] documentBytes;
-	byte[] docSignature;
+	byte[] serverSignature;
 	int rID;
 	byte[] signedDoc;
 	String clientID;
 	
-	public Document(byte[] documentBytes, byte[] docSignature, int rID, String timeStamp, byte[] signedDoc, String confType, String clientID) {
+	public Document(byte[] documentBytes, byte[] serverSignature, int rID, String timeStamp, byte[] signedDoc, String confType, String clientID) {
 
 		this.documentBytes = documentBytes;
-		this.docSignature = docSignature; //la firma del cliente
+		this.serverSignature = serverSignature; 
 		this.rID = rID;
 		this.TimeStamp = timeStamp;
-		this.signedDoc = signedDoc; //la firma del server
+		this.signedDoc = signedDoc;
 		this.confType = confType;
 		this.clientID = clientID;
 	}
@@ -72,12 +72,12 @@ public class Document implements Serializable{
 		this.documentBytes = documentBytes;
 	}
 
-	public byte[] getDocSignature() {
-		return docSignature;
+	public byte[] getServerSignature() {
+		return serverSignature;
 	}
 
-	public void setDocSignature(byte[] docSignature) {
-		this.docSignature = docSignature;
+	public void setServerSignature(byte[] docSignature) {
+		this.serverSignature = docSignature;
 	}
 
 	public int getrID() {

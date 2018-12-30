@@ -49,7 +49,8 @@ public class Client {
 	static String suite;
 	static Scanner in = new Scanner(System.in);;
 	static TreeMap<Integer, byte[]> hashedDocsTree = new TreeMap<Integer, byte[]>(); //arbol que almacena valores hash de los documentos registrados junto a su número de registro
-
+	static TreeMap<Integer, byte[]> signedDocsTree = new TreeMap<Integer, byte[]>();
+	
 	public static void main(String[] args) {
 
 		say("Getting arguments");
@@ -125,9 +126,9 @@ public class Client {
 	}
 
 	//stores the recovered document in the user's file system
-	private static void storeDoc(byte[] hashedDoc, byte[] documentBytes) {
+	private static void storeDoc(int rID, byte[] hashedDoc, byte[] documentBytes) {
 		
-		Path path = Paths.get("doc_" + hashedDoc);
+		Path path = Paths.get("doc_" + rID + ".png");
 		try {
 			Files.write(path, documentBytes);
 		} catch (IOException e) {
@@ -391,7 +392,7 @@ public class Client {
 
 			String timeStamp = ((Response) response).getTimeStamp();
 			byte[] cypheredDoc = ((Response) response).getCypheredDoc();
-			byte[] signedDoc = ((Response) response).getSignedDoc();
+			byte[] serverSignature = ((Response) response).getServerSignature();
 			byte[] serverSignCert = ((Response) response).getServerSignCert();
 
 			if( ! validateServerSignCert(serverSignCert) ){
@@ -402,25 +403,40 @@ public class Client {
 
 				byte[] documentBytes = decypherDoc(cypheredDoc);
 
-				byte[] sByClientDoc = signDoc(documentBytes);
+				byte[] sByClientDoc = signedDocsTree.get(RID);
+	
+				Path path = Paths.get("recovered_doc.png");
+				try {
+					Files.write(path, documentBytes);
+				} catch (IOException e) {
+					e.printStackTrace();
+					say("Failed to store the document");
+				}
 				
-				if( ! verifyServerSign(RID, timeStamp, documentBytes,  sByClientDoc, signedDoc)) {
+				say("documentBytes " + Arrays.toString(documentBytes));
+				say("sByClientDoc " + Arrays.toString(sByClientDoc));
+				say("serverSignature " + Arrays.toString(serverSignature));
+				
+				if( ! verifyServerSign(RID, timeStamp, documentBytes,  sByClientDoc, serverSignature)) {
 
 					say("FALLO DE FIRMA DEL REGISTRADOR");
 
 				} else {
 
 					byte[] hashedDoc = hashDoc(documentBytes);
+					
+					say("Message digest = " + Arrays.toString(hashedDoc));
+
 					byte[] OriginalHashedDoc = hashedDocsTree.get(RID);
 
-					if( ! hashedDoc.equals(OriginalHashedDoc) ) {
+					if( ! Arrays.equals(hashedDoc, OriginalHashedDoc) ) {
 						
 						say("DOCUMENTO ALTERADO POR EL REGISTRADOR");
 
 					} else {
 
 						say("DOCUMENTO RECUPERADO CORRECTAMENTE " + RID + " " + timeStamp );
-						storeDoc(hashedDoc, documentBytes);
+						storeDoc(RID, hashedDoc, documentBytes);
 					}
 				}
 			}
@@ -456,6 +472,8 @@ public class Client {
 		byte[] docContent = document.getContent();
 
 		String confType = getConfType();
+		
+		say("docContent " + Arrays.toString(docContent));
 
 		byte[] cypheredDoc = cipherDoc(docContent);
 		
@@ -507,8 +525,10 @@ public class Client {
 
 					hashedDocsTree.put(RID, hashedDoc);
 					
-					say("Message digest = " + hashedDoc);
+					say("Message digest = " + Arrays.toString(hashedDoc));
 
+					signedDocsTree.put(RID, signedDoc);
+					
 					//TODO para hacer las pruebas es mejor no borrar de momento
 					//deleteDocAndSignature(docName);
 				}

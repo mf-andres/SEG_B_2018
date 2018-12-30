@@ -151,7 +151,9 @@ public class Server {
 		byte[] cDoc = null;
 		
 		try {
+		
 			cDoc = SymmetricCipher.cifrado(documentBytes, keyStore, "123456", "aes_server");
+		
 		} catch (InvalidKeyException | NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException
 				| NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | IOException e) {
 			
@@ -489,8 +491,8 @@ public class Server {
 				
 				String timeStamp = doc.getTimeStamp();
 				String confType = doc.getConfType();
-				byte[] documentBytes = doc.getContent();
-				byte[] signedDoc = doc.getSignedDoc();
+				byte[] documentBytes = doc.getDocumentBytes();
+				byte[] serverSignature = doc.getServerSignature();
 				
 				if(confType.equals("private")) {
 				
@@ -498,15 +500,28 @@ public class Server {
 					
 					if(documentBytes == null) {
 						
-						say("unable to deipher doc from storage");
+						say("unable to decipher doc from storage");
 						return;
 					}
+				}
+
+				say("timeStamp " + timeStamp);
+				say("confType " + confType);
+				say("document bytes " + Arrays.toString(documentBytes));
+				say("serverSignature " + Arrays.toString(serverSignature));
+
+				Path path = Paths.get("doc_on_server_descifrado.png");
+				try {
+					Files.write(path, documentBytes);
+				} catch (IOException e) {
+					e.printStackTrace();
+					say("Failed to store the document");
 				}
 				
 				byte[] cypheredDoc = cypherDoc(documentBytes);
 				
 				//TODO cert servidor
-				sendRecDocRes(confType, RID, timeStamp, cypheredDoc, signedDoc, out);
+				sendRecDocRes(confType, RID, timeStamp, cypheredDoc, serverSignature, out);
 			}
 		}
 	}
@@ -557,7 +572,7 @@ public class Server {
 				byte[] serverSignature = signDoc( RID, timeStamp, documentBytes, signedDoc);
 				
 				say("");
-				say("serverSignature " + serverSignature);
+				say("serverSignature " + Arrays.toString(serverSignature));
 				
 				if(serverSignature == null) {
 					
@@ -570,7 +585,7 @@ public class Server {
 					documentBytes = cypherDocForStorage(documentBytes);
 				}
 				
-				//para probar el registro
+				//TODO para probar el registro
 				Path path = Paths.get("doc_on_server.png");
 				try {
 					Files.write(path, documentBytes);
@@ -616,9 +631,9 @@ public class Server {
 	}
 	
 	//elaborate recover document response
-	private static void sendRecDocRes(String confType, int rid, String timeStamp, byte[] cypheredDoc, byte[] signedDoc, ObjectOutputStream out) throws IOException {
+	private static void sendRecDocRes(String confType, int rid, String timeStamp, byte[] cypheredDoc, byte[] serverSignature, ObjectOutputStream out) throws IOException {
 
-		Response response = new Response(confType, rid, timeStamp, cypheredDoc, signedDoc);
+		Response response = new Response(confType, rid, timeStamp, cypheredDoc, serverSignature);
 		out.writeInt((int)1);
 		out.writeObject(response);
 	}
@@ -660,10 +675,12 @@ public class Server {
 		return documentBytes;
 	}
 	
-	private static void storeDoc(byte[] documentBytes, byte[] docSignature, int rID, String timeStamp, byte[] signedDoc, String confType, String clientID) throws IOException {
+	private static void storeDoc(byte[] documentBytes, byte[] signedDoc, int rID, String timeStamp, byte[] serverSignature, String confType, String clientID) throws IOException {
 		
 		//ojo, sign doc es la firma del server, docSingature la del registrador
-		Document doc = new Document(documentBytes, docSignature, rID, timeStamp, signedDoc, confType, clientID);
+		Document doc = new Document(documentBytes, serverSignature, rID, timeStamp, signedDoc, confType, clientID);
+		
+		say("documentBytes at storing " + Arrays.toString(documentBytes));
 		
 		FileOutputStream fout = new FileOutputStream("./docs/doc_" + rID + ".sig");
 		ObjectOutputStream oos = new ObjectOutputStream(fout);

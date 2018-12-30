@@ -25,13 +25,13 @@ public class Response implements Serializable {
 		this.authCert = authCert;
 	}
 	
-	public Response(String confType, int rid, String timeStamp, byte[] cypheredDoc, byte[] signedDoc2) {
+	public Response(String confType, int rid, String timeStamp, byte[] cypheredDoc, byte[] serverSignature) {
 		
 		this.confType = confType;
 		this.rid = rid;
 		this.timeStamp = timeStamp;
 		this.cypheredDoc = cypheredDoc;
-		this.signedDoc = signedDoc2;
+		this.serverSignature = serverSignature;
 	}
 	
 	public byte[] getSignCert() {
