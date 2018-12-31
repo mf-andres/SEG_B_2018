@@ -1,29 +1,20 @@
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.InvalidParameterSpecException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,15 +28,13 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-import com.sun.security.auth.X500Principal;
-
 public class Server {
 
 	static KeyStore keyStore;
 	static KeyStore trustStore;
 	static char[] passphrase;
 	static int port;
-	static String cypheringAlgorithm;
+	static String cipheringAlgorithm;
 	static int nextRID = 0;
 
 	public static void main(String[] args) {
@@ -58,7 +47,14 @@ public class Server {
 		say("Setting net parameters");
 		port = 5555;
 	
-		ServerSocket ss = prepareConection();
+		say("Preparing connection");
+		ServerSocket ss;
+		try {
+			ss = prepareConection();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			return;
+		}
 		
 		while(true) {
 	
@@ -69,7 +65,7 @@ public class Server {
 			} catch (IOException e2) {
 				e2.printStackTrace();
 				say("Connection failed");
-				return;
+				continue;
 			}
 			
 			say("Conection acepted");
@@ -78,9 +74,9 @@ public class Server {
 			Request request;
 			try {
 				request = getRequest(socket);
-			} catch (IOException | ClassNotFoundException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
-				return;
+				continue;
 			}
 			
 			int requestType = request.getType();
@@ -88,6 +84,7 @@ public class Server {
 			switch (requestType) {
 			case 1:
 	
+				say("Register document");
 				try {
 					registerDocResponse(request, socket);
 				} catch (Exception e) {
@@ -97,18 +94,20 @@ public class Server {
 	
 			case 2:
 	
+				say("List documents");
 				try {
 					listDocsResponse(request, socket);
-				} catch (IOException e1) {
+				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
 				break;
 	
 			case 3:
 	
+				say("Recover document");
 				try {
 					recoverDocResponse(request, socket);
-				} catch (IOException | ClassNotFoundException e1) {
+				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
 				break;
@@ -129,78 +128,47 @@ public class Server {
 	}
 
 	//asymmetrically to send to the client
-	private static byte[] cypherDoc(byte[] documentBytes) {
+	private static byte[] cipherDoc(byte[] documentBytes) throws Exception {
 		
 		byte[] cDoc = null;
-		
-		try {
 
-			cDoc = AsymmetricCipher.cifrado(documentBytes, trustStore, passphrase.toString(), "rsa_client_cert");
-
-		} catch (Exception e) {
-
-			e.printStackTrace();
-		} 
+		cDoc = AsymmetricCipher.cifrado(documentBytes, trustStore, passphrase.toString(), "rsa_client_cert");
 
 		return cDoc;
 	}
 
 	//symmetric ciphering with secret key
-	private static byte[] cypherDocForStorage(byte[] documentBytes) {
+	private static byte[] cipherDocForStorage(byte[] documentBytes) throws Exception {
 
 		byte[] cDoc = null;
 		
-		try {
-		
-			cDoc = SymmetricCipher.cifrado(documentBytes, keyStore, "123456", "aes_server");
-		
-		} catch (InvalidKeyException | NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException
-				| NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | IOException e) {
-			
-			e.printStackTrace();
-		}
+		cDoc = SymmetricCipher.cifrado(documentBytes, keyStore, "123456", "aes_server");
 		
 		return cDoc;
 	}
 
 	//assymetrically to receive from the client
-	private static byte[] decipherDoc(byte[] cipheredDoc) {
+	private static byte[] decipherDoc(byte[] cipheredDoc) throws Exception {
 
 		byte[] dDoc = null;
-
-		try {
 		
-			dDoc = AsymmetricCipher.descifrado(cipheredDoc, keyStore, passphrase.toString(), "rsa_server");
-	
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException
-				| IllegalBlockSizeException | BadPaddingException | KeyStoreException | UnrecoverableEntryException
-				| IOException e) {
-		
-			e.printStackTrace();
-		}
+		dDoc = AsymmetricCipher.descifrado(cipheredDoc, keyStore, passphrase.toString(), "rsa_server");
 		
 		return dDoc;
 	}
 
 	//symmetric deciphering with secret key
-	private static byte[] decypherDocForStorage(byte[] cypheredDoc) {
+	private static byte[] decipherDocForStorage(byte[] cipheredDoc) throws Exception {
 
 		byte[] dDoc = null;
-		
-		try {
 			
-			dDoc = SymmetricCipher.descifrado(cypheredDoc, keyStore, "123456", "aes_server");
+		dDoc = SymmetricCipher.descifrado(cipheredDoc, keyStore, "123456", "aes_server");
 	
-		} catch (Exception e) {
-		
-			e.printStackTrace();
-		}
-		
 		return dDoc;
 	}
 
 	//tells whether or not a document is stored
-	private static boolean docExists(int rID) {
+	private static boolean docExists(int rID) throws Exception{
 		
 		boolean found = false;
 		
@@ -215,7 +183,9 @@ public class Server {
 				String fileName = file.getName();
 		        System.out.println(fileName);
 		        
-		        if(fileName.contains("_" + rID + ".sig")) {
+		        Document doc = getDoc(fileName);
+		        
+		        if(doc.getrID() == rID) {
 		        
 		        	found = true;
 		        	break;
@@ -232,7 +202,7 @@ public class Server {
 	
 	
 			say("Wrong parameters");
-			say("Server keyStoreFile KeyStorePassword trustStoreFile cypheringAlgorithm");
+			say("Server keyStoreFile KeyStorePassword trustStoreFile cipheringAlgorithm");
 			return -1;
 	
 		} else {
@@ -252,7 +222,7 @@ public class Server {
 				trustStore = KeyStore.getInstance("JCEKS");
 				trustStore.load(new FileInputStream(trustStoreName),passphrase);
 	
-				cypheringAlgorithm = args[3];
+				cipheringAlgorithm = args[3];
 	
 			} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
 	
@@ -265,11 +235,36 @@ public class Server {
 	}
 
 	//recover a given stored doc
-	private static Document getDoc(int rID) throws IOException, ClassNotFoundException {
+	private static Document getDoc(int rID) throws Exception {
 
+		String docsFolder = "./docs";
+		File folder = new File(docsFolder);
+		File[] listOfFiles = folder.listFiles();
+
+		for (File file : listOfFiles) {
+		    
+			if (file.isFile()) {
+		    	
+				String fileName = file.getName();
+		        System.out.println(fileName);
+		        
+		        Document doc = getDoc(fileName);
+		        
+		        if(doc.getrID() == rID){
+		        
+		        	return doc;
+		        }
+			}
+		}
+		
+		return null;
+	}
+
+	private static Document getDoc(String fileName) throws Exception {
+		
 		Document doc = new Document();
 
-		FileInputStream fis = new FileInputStream("./docs/doc_" + rID + ".sig");
+		FileInputStream fis = new FileInputStream("./docs/" + fileName);
 
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		doc = (Document) ois.readObject();
@@ -278,41 +273,14 @@ public class Server {
 
 		return doc;
 	}
-
-	private static Document getDoc(String fileName) {
-		
-		Document doc = new Document();
-		
-		try {
-			
-			FileInputStream fis = new FileInputStream("./docs/" + fileName);
-			
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			doc = (Document) ois.readObject();
-			
-			ois.close();
-			
-		} catch (ClassNotFoundException e) {
-			
-			e.printStackTrace();
-			return null;
-			
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-			return null;
-		}
-		
-		return doc;
-	}
 	
 	private static byte[] getMyCertAuth() {
 		//TODO
 		return "MYCERTAUTH".getBytes();
 	}
 
-	//recover a list of the privatly stored documents
-	private static String getPrivateDocs() {
+	//recover a list of the privately stored documents
+	private static String getPrivateDocs() throws Exception {
 		
 		ArrayList<String> privateDocs = new ArrayList<String>();
 		
@@ -347,7 +315,7 @@ public class Server {
 	}
 
 	//recover a list of the publicly stored documents
-	private static String getPublicDocs() {
+	private static String getPublicDocs() throws Exception {
 
 		ArrayList<String> publicDocs = new ArrayList<String>();
 		
@@ -381,7 +349,7 @@ public class Server {
 		return serializedList;
 	}
 
-	private static Request getRequest(Socket socket) throws IOException, ClassNotFoundException {
+	private static Request getRequest(Socket socket) throws Exception {
 		
 		Request request = null;
 		
@@ -394,14 +362,14 @@ public class Server {
 		switch (action) {
 		case 1:
 			
-			say("Received recoverDoc request");
+			say("Received registerDoc request");
 			request = (Request) in.readObject();
 			request.setType(1);
 			break;
 			
 		case 2:
 			
-			say("Received recoverDoc request");
+			say("Received listDocs request");
 			request = (Request) in.readObject();
 			request.setType(2);
 			break;
@@ -434,22 +402,24 @@ public class Server {
 		return timestamp.toString();
 	}
 
-	private static void listDocsResponse(Request request, Socket socket) throws IOException {
+	private static void listDocsResponse(Request request, Socket socket) throws Exception {
 	
 		String confType = request.getConfType();
 		X509Certificate clientAuthCert = request.getAuthCert();
 		
 		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 		
+		say("Validating");
 		if( ! validateClientAuthCert(clientAuthCert) ) {
 			
-			String error = "CERTIFICADO INCORRECTO";
+			String error = "Certificado incorrecto";
 			
 			say(error);
 			sendErrorRes(error, out);
 			
 		} else {
 			
+			say("Sending response");
 			if( ! confType.equals("private") ) {
 				
 				String  publicDocs = getPublicDocs();
@@ -463,32 +433,34 @@ public class Server {
 		}
 	}
 	
-	//TODO tengo la sensación de que si nos da que un documento no existe puede saltar una excepción y que no sea devuelto ningún mensaje al usuario
-	private static void recoverDocResponse(Request request, Socket socket) throws IOException, ClassNotFoundException {
+	private static void recoverDocResponse(Request request, Socket socket) throws Exception {
 		
 		X509Certificate clientAuthCert = request.getAuthCert();
 		int RID = request.getRID();
 		
 		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 		
+		say("Checkig document existence");
 		if( ! docExists(RID) ) {
 			
-			String error = "DOCUMENTO NO EXISTENTE";
+			String error = "Documento no existente";
 			sendErrorRes(error, out);
 		
 		} else {
 			
-			
+			say("Checking user permits");
 			if( ! userHasPermit(RID, clientAuthCert) ) {
 				
-				String error = "ACCESO NO PERMITIDO";
+				String error = "Acceso no permitido";
 				say(error);
 				sendErrorRes(error, out);
 				
 			} else {
 				
+				say("Recovering document");
 				Document doc = getDoc(RID);
 				
+				String docName = doc.getName();
 				String timeStamp = doc.getTimeStamp();
 				String confType = doc.getConfType();
 				byte[] documentBytes = doc.getDocumentBytes();
@@ -496,111 +468,67 @@ public class Server {
 				
 				if(confType.equals("private")) {
 				
-					documentBytes = decypherDocForStorage(documentBytes);
-					
-					if(documentBytes == null) {
-						
-						say("unable to decipher doc from storage");
-						return;
-					}
-				}
-
-				say("timeStamp " + timeStamp);
-				say("confType " + confType);
-				say("document bytes " + Arrays.toString(documentBytes));
-				say("serverSignature " + Arrays.toString(serverSignature));
-
-				Path path = Paths.get("doc_on_server_descifrado.png");
-				try {
-					Files.write(path, documentBytes);
-				} catch (IOException e) {
-					e.printStackTrace();
-					say("Failed to store the document");
+					documentBytes = decipherDocForStorage(documentBytes);
 				}
 				
-				byte[] cypheredDoc = cypherDoc(documentBytes);
-				
-				//TODO cert servidor
-				sendRecDocRes(confType, RID, timeStamp, cypheredDoc, serverSignature, out);
+				byte[] cipheredDoc = cipherDoc(documentBytes);
+
+				say("Sending response");
+				sendRecDocRes(docName, confType, RID, timeStamp, cipheredDoc, serverSignature, out);
 			}
 		}
 	}
 	
 	private static void registerDocResponse(Request request, Socket socket) throws Exception {
 	
-		//String docName = request.getDocName(); //hay que pensar si devolver esto para guardar después en el cliente
+		String docName = request.getDocName();
 		String confType = request.getConfType();
-		byte[] cypheredDoc = request.getCypheredDoc();
+		byte[] cipheredDoc = request.getCipheredDoc();
 		byte[] signedDoc = request.getSignedDoc();
 		X509Certificate clientSignCert = request.getSignCert();
 		
 		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 		
+		say("Validating");
 		if( ! validateClientSignCert(clientSignCert) ) {
 			
-			String error = "CERTIFICADO DE FIRMA INCORRECTO";
+			String error = "Certificado de firma incorrecto";
 			
 			say(error);
 			sendErrorRes(error, out);
 			
 		} else {
 			
-			if( ! verifyDoc(cypheredDoc, signedDoc) ) {
+			say("Verifying");
+			if( ! verifyDoc(cipheredDoc, signedDoc) ) {
 				
-				String error = "FIRMA INCORRECTA";
+				String error = "Firma incorrecta";
 				say(error);
 				sendErrorRes(error, out);
 			
 			} else {
 				
-				byte[] documentBytes = decipherDoc(cypheredDoc);
-				
-				if(documentBytes == null) {
-					
-					say("Unable to decipher document");
-					return;
-				}
+				say("Preparing document for storage");
+				byte[] documentBytes = decipherDoc(cipheredDoc);
 				
 				int RID = getRID();
 				String timeStamp = getTimestamp();
 				
-				say("RID " + RID);
-				say("timeStamp " + timeStamp);
-				say("documentBytes " + Arrays.toString(documentBytes));
-				say("signedDoc " + Arrays.toString(signedDoc));
-				
 				byte[] serverSignature = signDoc( RID, timeStamp, documentBytes, signedDoc);
-				
-				say("");
-				say("serverSignature " + Arrays.toString(serverSignature));
-				
-				if(serverSignature == null) {
-					
-					say("Unable to sign doc for storage");
-					return;
-				}
 				
 				if( confType.equals("private") ) {
 					
-					documentBytes = cypherDocForStorage(documentBytes);
+					documentBytes = cipherDocForStorage(documentBytes);
 				}
-				
-				//TODO para probar el registro
-				Path path = Paths.get("doc_on_server.png");
-				try {
-					Files.write(path, documentBytes);
-				} catch (IOException e) {
-					e.printStackTrace();
-					say("Failed to store the document");
-				}
-				
+								
 				String clientID = getClientID(clientSignCert);
-				say("client id " + clientID);//TODO probar que el client id se recupera correctamente
 				
-				storeDoc(documentBytes, signedDoc, RID, timeStamp, serverSignature, confType, clientID);
+				say("Storing document");
+				storeDoc(docName, documentBytes, signedDoc, RID, timeStamp, serverSignature, confType, clientID);
 				
 				byte[] myCertAuth = getMyCertAuth();
 				
+				say("Seding response");
 				sendRegDocRes(RID, timeStamp, serverSignature, myCertAuth, out);
 			}
 		}
@@ -631,9 +559,9 @@ public class Server {
 	}
 	
 	//elaborate recover document response
-	private static void sendRecDocRes(String confType, int rid, String timeStamp, byte[] cypheredDoc, byte[] serverSignature, ObjectOutputStream out) throws IOException {
+	private static void sendRecDocRes(String docName, String confType, int rid, String timeStamp, byte[] cipheredDoc, byte[] serverSignature, ObjectOutputStream out) throws IOException {
 
-		Response response = new Response(confType, rid, timeStamp, cypheredDoc, serverSignature);
+		Response response = new Response(docName, confType, rid, timeStamp, cipheredDoc, serverSignature);
 		out.writeInt((int)1);
 		out.writeObject(response);
 	}
@@ -647,24 +575,16 @@ public class Server {
 	}
 	
 	//firma el documento con la clave privada (esto es para almacenarlo)
-	private static byte[] signDoc(int rID, String timeStamp, byte[] documentBytes, byte[] docSignature) {
+	private static byte[] signDoc(int rID, String timeStamp, byte[] documentBytes, byte[] docSignature) throws Exception {
 
 		ServerSignVerifier ssv = new ServerSignVerifier(keyStore, trustStore);
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		
-		try {
 
-			baos.write(rID);
-			baos.write(timeStamp.getBytes());
-			baos.write(documentBytes);
-			baos.write(docSignature);
-			
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-			return null;
-		}
+		baos.write(rID);
+		baos.write(timeStamp.getBytes());
+		baos.write(documentBytes);
+		baos.write(docSignature);
 
 		documentBytes = baos.toByteArray();
 		
@@ -675,14 +595,11 @@ public class Server {
 		return documentBytes;
 	}
 	
-	private static void storeDoc(byte[] documentBytes, byte[] signedDoc, int rID, String timeStamp, byte[] serverSignature, String confType, String clientID) throws IOException {
+	private static void storeDoc(String docName, byte[] documentBytes, byte[] signedDoc, int rID, String timeStamp, byte[] serverSignature, String confType, String clientID) throws IOException {
+
+		Document doc = new Document(docName, documentBytes, serverSignature, rID, timeStamp, signedDoc, confType, clientID);
 		
-		//ojo, sign doc es la firma del server, docSingature la del registrador
-		Document doc = new Document(documentBytes, serverSignature, rID, timeStamp, signedDoc, confType, clientID);
-		
-		say("documentBytes at storing " + Arrays.toString(documentBytes));
-		
-		FileOutputStream fout = new FileOutputStream("./docs/doc_" + rID + ".sig");
+		FileOutputStream fout = new FileOutputStream("./docs/" + docName + ".sig");
 		ObjectOutputStream oos = new ObjectOutputStream(fout);
 		oos.writeObject(doc);
 		
@@ -690,7 +607,7 @@ public class Server {
 	}
 	
 	//tells whether the user has permit to access the document and whether the document is private or public
-	private static boolean userHasPermit(int rID, X509Certificate clientAuthCert) throws ClassNotFoundException, IOException {
+	private static boolean userHasPermit(int rID, X509Certificate clientAuthCert) throws Exception {
 		
 		String clientID = getClientID(clientAuthCert);
 		
@@ -717,65 +634,41 @@ public class Server {
 		return true;
 	}
 	
-	private static boolean verifyDoc(byte[] cypheredDoc, byte[] docSignature) {
+	private static boolean verifyDoc(byte[] cipheredDoc, byte[] docSignature) throws Exception {
 
 		boolean verify = false;
 		
 		ServerSignVerifier ssv = new ServerSignVerifier(keyStore, trustStore);
 		
-		try {
-		
-			verify = ssv.VerifyClientSign(cypheredDoc, docSignature);
-		
-		} catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException | IOException e) {
-		
-			e.printStackTrace();
-		}
+		verify = ssv.VerifyClientSign(cipheredDoc, docSignature);
 		
 		return verify;
 	}
 	
-	private static ServerSocket prepareConection() {
-	
-		ServerSocket ss;
-	
-	    try {
-	    	
-			SSLServerSocketFactory ssf = null;
-			try {
-				
-			    SSLContext ctx;
-			    KeyManagerFactory kmf;
-			    TrustManagerFactory tmf;
-	
-			    ctx = SSLContext.getInstance("TLS");
-			    kmf = KeyManagerFactory.getInstance("SunX509");
-			    tmf = TrustManagerFactory.getInstance("SunX509");
-			    
-			    kmf.init(keyStore, passphrase);
-			    tmf.init(trustStore);
-			    ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-	
-			    ssf = ctx.getServerSocketFactory();
-			    
-			} catch (Exception e) {
-	
-				e.printStackTrace();
-				return null;
-			}    
-	
-			ss = ssf.createServerSocket(port);
-			
-			((SSLServerSocket)ss).setNeedClientAuth(true);
-			
+	private static ServerSocket prepareConection() throws Exception {
 
-			
-	    } catch (IOException e) {
-	
-	    	e.printStackTrace();
-	    	return null;
-		}
-	
+		ServerSocket ss;
+
+		SSLServerSocketFactory ssf;
+
+		SSLContext ctx;
+		KeyManagerFactory kmf;
+		TrustManagerFactory tmf;
+
+		ctx = SSLContext.getInstance("TLS");
+		kmf = KeyManagerFactory.getInstance("SunX509");
+		tmf = TrustManagerFactory.getInstance("SunX509");
+
+		kmf.init(keyStore, passphrase);
+		tmf.init(trustStore);
+		ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+		ssf = ctx.getServerSocketFactory();
+
+		ss = ssf.createServerSocket(port);
+
+		((SSLServerSocket)ss).setNeedClientAuth(true);
+
 		return ss;
 	}
 	

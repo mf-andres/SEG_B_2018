@@ -18,8 +18,9 @@ public class Document implements Serializable{
 	byte[] signedDoc;
 	String clientID;
 	
-	public Document(byte[] documentBytes, byte[] serverSignature, int rID, String timeStamp, byte[] signedDoc, String confType, String clientID) {
+	public Document(String name, byte[] documentBytes, byte[] serverSignature, int rID, String timeStamp, byte[] signedDoc, String confType, String clientID) {
 
+		this.name = name;
 		this.documentBytes = documentBytes;
 		this.serverSignature = serverSignature; 
 		this.rID = rID;

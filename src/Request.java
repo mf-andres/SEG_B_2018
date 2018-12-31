@@ -11,17 +11,17 @@ public class Request implements Serializable {
 	int type;
 	String docName;
 	String confType;
-	byte[] cypheredDoc;
+	byte[] cipheredDoc;
 	byte[] signedDoc;
 	X509Certificate signCert;
 	X509Certificate authCert;
 	int rid;
 	
-	public Request(String docName, String confType, byte[] cypheredDoc, byte[] signedDoc, X509Certificate mySignCert) {
+	public Request(String docName, String confType, byte[] cipheredDoc, byte[] signedDoc, X509Certificate mySignCert) {
 	
 		this.docName = docName;
 		this.confType = confType;
-		this.cypheredDoc = cypheredDoc;
+		this.cipheredDoc = cipheredDoc;
 		this.signedDoc = signedDoc;
 		this.signCert = mySignCert;
 	}
@@ -56,11 +56,11 @@ public class Request implements Serializable {
 	public void setConfType(String confType) {
 		this.confType = confType;
 	}
-	public byte[] getCypheredDoc() {
-		return cypheredDoc;
+	public byte[] getCipheredDoc() {
+		return cipheredDoc;
 	}
-	public void setCypheredDoc(byte[] cypheredDoc) {
-		this.cypheredDoc = cypheredDoc;
+	public void setCipheredDoc(byte[] cipheredDoc) {
+		this.cipheredDoc = cipheredDoc;
 	}
 	public byte[] getSignedDoc() {
 		return signedDoc;

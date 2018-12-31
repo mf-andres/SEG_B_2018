@@ -7,6 +7,7 @@ public class Response implements Serializable {
 	 */
 	private static final long serialVersionUID = 969327944693952639L;
 	
+	String docName;
 	byte[] signCert;
 	int rid;
 	String timeStamp;
@@ -14,7 +15,7 @@ public class Response implements Serializable {
 	String confType;
 	byte[] signedDoc;
 	byte[] serverSignCert;
-	byte[] cypheredDoc;
+	byte[] cipheredDoc;
 	byte[] authCert;
 	
 	public Response(int rid, String timeStamp, byte[] serverSignature, byte[] authCert) {
@@ -25,13 +26,22 @@ public class Response implements Serializable {
 		this.authCert = authCert;
 	}
 	
-	public Response(String confType, int rid, String timeStamp, byte[] cypheredDoc, byte[] serverSignature) {
+	public Response(String docName, String confType, int rid, String timeStamp, byte[] cipheredDoc, byte[] serverSignature) {
 		
+		this.docName = docName;
 		this.confType = confType;
 		this.rid = rid;
 		this.timeStamp = timeStamp;
-		this.cypheredDoc = cypheredDoc;
+		this.cipheredDoc = cipheredDoc;
 		this.serverSignature = serverSignature;
+	}
+	
+	public String getDocName() {
+		return docName;
+	}
+
+	public void setDocName(String docName) {
+		this.docName = docName;
 	}
 	
 	public byte[] getSignCert() {
@@ -76,10 +86,10 @@ public class Response implements Serializable {
 	public void setServerSignCert(byte[] serverSignCert) {
 		this.serverSignCert = serverSignCert;
 	}
-	public byte[] getCypheredDoc() {
-		return cypheredDoc;
+	public byte[] getCipheredDoc() {
+		return cipheredDoc;
 	}
-	public void setCypheredDoc(byte[] cypheredDoc) {
-		this.cypheredDoc = cypheredDoc;
+	public void setCipheredDoc(byte[] cipheredDoc) {
+		this.cipheredDoc = cipheredDoc;
 	}
 }
