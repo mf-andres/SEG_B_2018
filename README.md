@@ -1,5 +1,7 @@
 # SEG_B_2018
-Client and server aplications that interchange documents via a secured ssl/tls channel
+This project was carried out for the Security subject of the Telecomunications Engineering Degree of the University of Vigo. 
+
+The aim of the project was to develop a client and a server that could interchange documents via a secured ssl/tls channel.
 
 Client arguments:
 keyStoreFile trustStoreFile
